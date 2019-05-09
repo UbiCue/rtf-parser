@@ -48,9 +48,21 @@ class RTFDocument extends RTFGroup {
       if (node.content.length) {
         const initialStyle = node.content[0].style
         const style = {}
-        style.font = this.getFont(initialStyle.font)
-        style.foreground = this.getColor(initialStyle.foreground)
-        style.background = this.getColor(initialStyle.background)
+        if (typeof node.style !== 'undefined' && node.style != null) {
+            style = node.style;
+        }
+        else {
+            style = {};
+        }
+        if (typeof style.font === 'undefined' || style.font == null) {
+            style.font = this.getFont(initialStyle.font);
+        }
+        if (typeof style.foreground === 'undefined' || style.foreground == null) {
+            style.foreground = this.getColor(initialStyle.foreground);
+        }
+        if (typeof style.background === 'undefined' || style.background == null) {
+            style.background = this.getColor(initialStyle.background);
+        }
         for (let prop of Object.keys(initialStyle)) {
           if (initialStyle[prop] == null) continue
           let match = true
