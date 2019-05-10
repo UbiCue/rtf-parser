@@ -40,6 +40,7 @@ class RTFInterpreter extends Writable {
     this.group = null
     this.once('prefinish', () => this.finisher())
     this.hexStore = []
+    this.spanStyle = {}
   }
   _write (cmd, encoding, done) {
     const method = 'cmd$' + cmd.type.replace(/-(.)/g, (_, char) => char.toUpperCase())
@@ -109,16 +110,25 @@ class RTFInterpreter extends Writable {
     if (!this.group) { // an RTF fragment, missing the {\rtf1 header
       this.group = this.doc
     }
+    //If there isn't already a style specified, use the current group style to start
+    if (typeof cmd.style === 'undefined') {
+        cmd.style = this.group.style;
+    }
+    //Update any styling specified for the current span
+    cmd.style.bold = this.spanStyle.bold;
+    cmd.style.italic = this.spanStyle.italic;
     this.group.addContent(new RTFSpan(cmd))
   }
   cmd$controlWord (cmd) {
     this.flushHexStore()
-    if (!this.group.type) this.group.type = cmd.value
-    const method = 'ctrl$' + cmd.value.replace(/-(.)/g, (_, char) => char.toUpperCase())
-    if (this[method]) {
-      this[method](cmd.param)
-    } else {
-      if (!this.group.get('ignorable')) process.emit('debug', method, cmd.param)
+    if (typeof this.group !== 'undefined' && this.group !== null) {
+      if (!this.group.type) this.group.type = cmd.value
+      const method = 'ctrl$' + cmd.value.replace(/-(.)/g, (_, char) => char.toUpperCase())
+      if (this[method]) {
+        this[method](cmd.param)
+      } else {
+        if (!this.group.get('ignorable')) process.emit('debug', method, cmd.param)
+      }
     }
   }
   cmd$hexchar (cmd) {
@@ -161,22 +171,28 @@ class RTFInterpreter extends Writable {
 
   // general style
   ctrl$par () {
-    this.group.addContent(new RTFParagraph())
+    //Create new paragraph, starting from document styling
+    this.group.addContent(new RTFParagraph(this.doc))
   }
   ctrl$pard () {
     this.group.resetStyle()
   }
   ctrl$plain () {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
-    this.group.style.bold = this.doc.getStyle('bold')
-    this.group.style.italic = this.doc.getStyle('italic')
-    this.group.style.underline = this.doc.getStyle('underline')
+    //When explicitly setting to plain, set all styles to false for group and span
+    this.group.style.bold = false;
+    this.group.style.italic = false;
+    this.group.style.underline = false;
+    this.spanStyle.bold = false;
+    this.spanStyle.italic = false;
   }
   ctrl$b (set) {
     this.group.style.bold = set !== 0
+    this.spanStyle.bold = this.group.style.bold
   }
   ctrl$i (set) {
     this.group.style.italic = set !== 0
+    this.spanStyle.italic = this.group.style.italic
   }
   ctrl$u (num) {
     var charBuf = Buffer.alloc ? Buffer.alloc(2) : new Buffer(2)
@@ -217,6 +233,10 @@ class RTFInterpreter extends Writable {
   }
   ctrl$culi (value) {
     this.group.style.indent = value * 100
+  }
+  ctrl$tab() {
+      var spacer = { value: "&nbsp;", style: this.group.style };
+      this.group.addContent(new RTFSpan(spacer));
   }
 
 // encodings
