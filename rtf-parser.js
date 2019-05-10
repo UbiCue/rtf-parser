@@ -12,6 +12,7 @@ class RTFParser extends Transform {
     this.char = 0
     this.row = 1
     this.col = 1
+    this.fullText = []
   }
   _transform (buf, encoding, done) {
     const text = buf.toString('ascii')
@@ -125,7 +126,7 @@ class RTFParser extends Transform {
   }
   emitText () {
     if (this.text === '') return
-    this.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
     this.text = ''
   }
   emitControlWord () {
@@ -133,7 +134,7 @@ class RTFParser extends Transform {
     if (this.controlWord === '') {
       this.emitError('empty control word')
     } else {
-      this.push({
+      this.fullText.push({
         type: 'control-word',
         value: this.controlWord,
         param: this.controlWordParam !== '' && Number(this.controlWordParam),
@@ -147,28 +148,43 @@ class RTFParser extends Transform {
   }
   emitStartGroup () {
     this.emitText()
-    this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
   emitEndGroup () {
     this.emitText()
-    this.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
   }
   emitIgnorable () {
     this.emitText()
-    this.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
   }
   emitHexChar () {
     this.emitText()
-    this.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
     this.hexChar = ''
   }
   emitError (message) {
     this.emitText()
-    this.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
+    this.fullText.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
   }
   emitEndParagraph () {
     this.emitText()
-    this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
+  }
+  
+  convert(text) {
+      for (let ii = 0; ii < text.length; ++ii) {
+          ++this.char
+          if (text[ii] === '\n') {
+              ++this.row
+              this.col = 1
+          } else {
+              ++this.col
+          }
+          this.parserState(text[ii])
+      }
+
+      return (this.fullText);
   }
 }
 
