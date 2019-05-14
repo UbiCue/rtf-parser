@@ -2,7 +2,8 @@
 const Transform = require('readable-stream').Transform
 
 function RTFParser {
-  this = Transform({objectMode: true});
+  //this = Transform({objectMode: true});
+  this.objectMode = true;
   this.text = ''
   this.controlWord = ''
   this.controlWordParam = ''
