@@ -31,18 +31,16 @@ const codeToCP = {
   254: 'CP437' // PC-437
 }
 
-class RTFInterpreter extends Writable {
-  constructor (document) {
-    super({objectMode: true})
-    this.doc = document
-    this.parserState = this.parseTop
-    this.groupStack = []
-    this.group = null
-    this.once('prefinish', () => this.finisher())
-    this.hexStore = []
-    this.spanStyle = {}
-  }
-  _write (cmd, encoding, done) {
+function RTFInterpreter(document) {
+  this = new Writable({objectMode: true});
+  this.doc = document
+  this.parserState = this.parseTop
+  this.groupStack = []
+  this.group = null
+  this.once('prefinish', () => this.finisher())
+  this.hexStore = []
+  this.spanStyle = {}
+  this._write = function(cmd, encoding, done) {
     const method = 'cmd$' + cmd.type.replace(/-(.)/g, (_, char) => char.toUpperCase())
     if (this[method]) {
       this[method](cmd)
@@ -51,7 +49,7 @@ class RTFInterpreter extends Writable {
     }
     done()
   }
-  finisher () {
+  finisher = function() {
     while (this.groupStack.length) this.cmd$groupEnd()
     const initialStyle = this.doc.content.length ? this.doc.content[0].style : []
     for (let prop of Object.keys(this.doc.style)) {
@@ -65,7 +63,7 @@ class RTFInterpreter extends Writable {
       if (match) this.doc.style[prop] = initialStyle[prop]
     }
   }
-  flushHexStore () {
+  flushHexStore = function() {
     if (this.hexStore.length > 0) {
       let hexstr = this.hexStore.map(cmd => cmd.value).join('')
       this.group.addContent(new RTFSpan({
@@ -76,20 +74,20 @@ class RTFInterpreter extends Writable {
     }
   }
 
-  cmd$groupStart () {
+  cmd$groupStart = function() {
     this.flushHexStore()
     if (this.group) this.groupStack.push(this.group)
     this.group = new RTFGroup(this.group || this.doc)
   }
-  cmd$ignorable () {
+  cmd$ignorable = function() {
     this.flushHexStore()
     this.group.ignorable = true
   }
-  cmd$endParagraph () {
+  cmd$endParagraph = function() {
     this.flushHexStore()
     this.group.addContent(new RTFParagraph())
   }
-  cmd$groupEnd () {
+  cmd$groupEnd = function() {
     this.flushHexStore()
     const endingGroup = this.group
     this.group = this.groupStack.pop()
@@ -105,7 +103,7 @@ class RTFInterpreter extends Writable {
       process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
     }
   }
-  cmd$text (cmd) {
+  cmd$text = function(cmd) {
     this.flushHexStore()
     if (!this.group) { // an RTF fragment, missing the {\rtf1 header
       this.group = this.doc
@@ -119,7 +117,7 @@ class RTFInterpreter extends Writable {
     cmd.style.italic = this.spanStyle.italic;
     this.group.addContent(new RTFSpan(cmd))
   }
-  cmd$controlWord (cmd) {
+  cmd$controlWord = function(cmd) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value
@@ -131,53 +129,53 @@ class RTFInterpreter extends Writable {
       }
     }
   }
-  cmd$hexchar (cmd) {
+  cmd$hexchar = function(cmd) {
     this.hexStore.push(cmd)
   }
-  cmd$error (cmd) {
+  cmd$error = function(cmd) {
     this.emit('error', new Error('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.'))
   }
 
-  ctrl$rtf () {
+  ctrl$rtf = function() {
     this.group = this.doc
   }
 
   // new line
-  ctrl$line () {
+  ctrl$line = function() {
     this.group.addContent(new RTFSpan({ value: '\n' }))
   }
 
   // alignment
-  ctrl$qc () {
+  ctrl$qc = function() {
     this.group.style.align = 'center'
   }
-  ctrl$qj () {
+  ctrl$qj = function() {
     this.group.style.align = 'justify'
   }
-  ctrl$ql () {
+  ctrl$ql = function() {
     this.group.style.align = 'left'
   }
-  ctrl$qr () {
+  ctrl$qr = function() {
     this.group.style.align = 'right'
   }
 
   // text direction
-  ctrl$rtlch () {
+  ctrl$rtlch = function() {
     this.group.style.dir = 'rtl'
   }
-  ctrl$ltrch () {
+  ctrl$ltrch = function() {
     this.group.style.dir = 'ltr'
   }
 
   // general style
-  ctrl$par () {
+  ctrl$par = function() {
     //Create new paragraph, starting from document styling
     this.group.addContent(new RTFParagraph(this.doc))
   }
-  ctrl$pard () {
+  ctrl$pard = function() {
     this.group.resetStyle()
   }
-  ctrl$plain () {
+  ctrl$plain = function() {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
     //When explicitly setting to plain, set all styles to false for group and span
     this.group.style.bold = false;
@@ -186,73 +184,73 @@ class RTFInterpreter extends Writable {
     this.spanStyle.bold = false;
     this.spanStyle.italic = false;
   }
-  ctrl$b (set) {
+  ctrl$b = function(set) {
     this.group.style.bold = set !== 0
     this.spanStyle.bold = this.group.style.bold
   }
-  ctrl$i (set) {
+  ctrl$i = function(set) {
     this.group.style.italic = set !== 0
     this.spanStyle.italic = this.group.style.italic
   }
-  ctrl$u (num) {
+  ctrl$u = function(num) {
     var charBuf = Buffer.alloc ? Buffer.alloc(2) : new Buffer(2)
     // RTF, for reasons, represents unicode characters as signed integers
     // thus managing to match literally no one.
     charBuf.writeInt16LE(num, 0)
     this.group.addContent(new RTFSpan({value: iconv.decode(charBuf, 'ucs2')}))
   }
-  ctrl$super () {
+  ctrl$super = function() {
     this.group.style.valign = 'super'
   }
-  ctrl$sub () {
+  ctrl$sub = function() {
     this.group.style.valign = 'sub'
   }
-  ctrl$nosupersub () {
+  ctrl$nosupersub = function() {
     this.group.style.valign = 'normal'
   }
-  ctrl$strike (set) {
+  ctrl$strike = function(set) {
     this.group.style.strikethrough = set !== 0
   }
-  ctrl$ul (set) {
+  ctrl$ul = function(set) {
     this.group.style.underline = set !== 0
   }
-  ctrl$ulnone (set) {
+  ctrl$ulnone = function(set) {
     this.group.style.underline = false
   }
-  ctrl$fi (value) {
+  ctrl$fi = function(value) {
     this.group.style.firstLineIndent = value
   }
-  ctrl$cufi (value) {
+  ctrl$cufi = function(value) {
     this.group.style.firstLineIndent = value * 100
   }
-  ctrl$li (value) {
+  ctrl$li = function(value) {
     this.group.style.indent = value
   }
-  ctrl$lin (value) {
+  ctrl$lin = function(value) {
     this.group.style.indent = value
   }
-  ctrl$culi (value) {
+  ctrl$culi = function(value) {
     this.group.style.indent = value * 100
   }
-  ctrl$tab() {
+  ctrl$tab = function() {
       var spacer = { value: "&nbsp;", style: this.group.style };
       this.group.addContent(new RTFSpan(spacer));
   }
 
 // encodings
-  ctrl$ansi () {
+  ctrl$ansi = function() {
     this.group.charset = 'ASCII'
   }
-  ctrl$mac () {
+  ctrl$mac = function() {
     this.group.charset = 'MacRoman'
   }
-  ctrl$pc () {
+  ctrl$pc = function() {
     this.group.charset = 'CP437'
   }
-  ctrl$pca () {
+  ctrl$pca = function() {
     this.group.charset = 'CP850'
   }
-  ctrl$ansicpg (codepage) {
+  ctrl$ansicpg = function(codepage) {
     if (availableCP.indexOf(codepage) === -1) {
       this.emit('error', new Error('Codepage ' + codepage + ' is not available.'))
     } else {
@@ -261,10 +259,10 @@ class RTFInterpreter extends Writable {
   }
 
 // fonts
-  ctrl$fonttbl () {
+  ctrl$fonttbl = function() {
     this.group = new FontTable(this.group.parent)
   }
-  ctrl$f (num) {
+  ctrl$f = function(num) {
     if (this.group instanceof FontTable) {
       this.group.currentFont = this.group.table[num] = new Font()
     } else if (this.group.parent instanceof FontTable) {
@@ -273,47 +271,47 @@ class RTFInterpreter extends Writable {
       this.group.style.font = num
     }
   }
-  ctrl$fnil () {
+  ctrl$fnil = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'nil'
     }
   }
-  ctrl$froman () {
+  ctrl$froman = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'roman'
     }
   }
-  ctrl$fswiss () {
+  ctrl$fswiss = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'swiss'
     }
   }
-  ctrl$fmodern () {
+  ctrl$fmodern = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'modern'
     }
   }
-  ctrl$fscript () {
+  ctrl$fscript = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'script'
     }
   }
-  ctrl$fdecor () {
+  ctrl$fdecor = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'decor'
     }
   }
-  ctrl$ftech () {
+  ctrl$ftech = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'tech'
     }
   }
-  ctrl$fbidi () {
+  ctrl$fbidi = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'bidi'
     }
   }
-  ctrl$fcharset (code) {
+  ctrl$fcharset = function(code) {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       let charset = null
       if (code === 1) {
@@ -327,96 +325,90 @@ class RTFInterpreter extends Writable {
       this.group.get('currentFont').charset = charset
     }
   }
-  ctrl$fprq (pitch) {
+  ctrl$fprq = function(pitch) {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').pitch = pitch
     }
   }
 
   // colors
-  ctrl$colortbl () {
+  ctrl$colortbl = function() {
     this.group = new ColorTable(this.group.parent)
   }
-  ctrl$red (value) {
+  ctrl$red = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.red = value
     }
   }
-  ctrl$blue (value) {
+  ctrl$blue = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.blue = value
     }
   }
-  ctrl$green (value) {
+  ctrl$green = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.green = value
     }
   }
-  ctrl$cf (value) {
+  ctrl$cf = function(value) {
     this.group.style.foreground = value
   }
-  ctrl$cb (value) {
+  ctrl$cb = function(value) {
     this.group.style.background = value
   }
-  ctrl$fs (value) {
+  ctrl$fs = function(value) {
     this.group.style.fontSize = value
   }
 
 // margins
-  ctrl$margl (value) {
+  ctrl$margl = function(value) {
     this.doc.marginLeft = value
   }
-  ctrl$margr (value) {
+  ctrl$margr = function(value) {
     this.doc.marginRight = value
   }
-  ctrl$margt (value) {
+  ctrl$margt = function(value) {
     this.doc.marginTop = value
   }
-  ctrl$margb (value) {
+  ctrl$margb = function(value) {
     this.doc.marginBottom = value
   }
 
 // unsupported (and we need to ignore content)
-  ctrl$stylesheet (value) {
+  ctrl$stylesheet = function(value) {
     this.group.ignorable = true
   }
-  ctrl$info (value) {
+  ctrl$info = function(value) {
     this.group.ignorable = true
   }
-  ctrl$mmathPr (value) {
+  ctrl$mmathPr = function(value) {
     this.group.ignorable = true
   }
 }
 
-class FontTable extends RTFGroup {
-  constructor (parent) {
-    super(parent)
-    this.table = []
-    this.currentFont = {family: 'roman', charset: 'ASCII', name: 'Serif'}
-  }
-  addContent (text) {
+function FontTable(parent) {
+  this = RTFGroup(parent);
+  this.table = []
+  this.currentFont = {family: 'roman', charset: 'ASCII', name: 'Serif'}
+  this.addContent = function(text) {
     this.currentFont.name += text.value.replace(/;\s*$/, '')
   }
 }
 
-class Font {
-  constructor () {
-    this.family = null
-    this.charset = null
-    this.name = ''
-    this.pitch = 0
-  }
+function Font() {
+  this.family = null
+  this.charset = null
+  this.name = ''
+  this.pitch = 0
 }
 
-class ColorTable extends RTFGroup {
-  constructor (parent) {
-    super(parent)
-    this.table = []
-    this.red = 0
-    this.blue = 0
-    this.green = 0
-  }
-  addContent (text) {
+function ColorTable(parent) {
+  this - RTFGroup(parent);
+  this.table = []
+  this.red = 0
+  this.blue = 0
+  this.green = 0
+  this.addContent = function(text) {
     assert(text.value === ';', 'got: ' + util.inspect(text))
     this.table.push({
       red: this.red,
