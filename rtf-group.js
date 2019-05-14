@@ -1,41 +1,40 @@
-//'use strict'
+'use strict'
 
-class RTFGroup {
-  constructor (parent) {
-    this.parent = parent
-    this.content = []
-    this.fonts = []
-    if (typeof parent !== 'undefined' && typeof parent.colors !== 'undefined') {
-        this.colors = parent.colors;
-    }
-    else {
-        this.colors = [];
-    }
-    if (typeof parent != 'undefined' && typeof parent.style !== 'undefined') {
-        this.style = parent.style;
-    }
-    else {
-        this.style = {};
-    }
-    this.ignorable = null
+function RTFGroup(parent) {
+  this.parent = parent
+  this.content = []
+  this.fonts = []
+  if (typeof parent !== 'undefined' && typeof parent.colors !== 'undefined') {
+      this.colors = parent.colors;
   }
-  get (name) {
+  else {
+      this.colors = [];
+  }
+  if (typeof parent != 'undefined' && typeof parent.style !== 'undefined') {
+      this.style = parent.style;
+  }
+  else {
+      this.style = {};
+  }
+  this.ignorable = null
+
+  get = function(name) {
     return this[name] != null ? this[name] : this.parent.get(name)
-  }
-  getFont (num) {
+  };
+  getFont = function(num) {
     return this.fonts[num] != null && this.fonts[num] !== undefined ? this.fonts[num] : this.parent.getFont(num)
-  }
-  getColor (num) {
+  };
+  getColor = function(num) {
     return this.colors[num] != null ? this.colors[num] : this.parent.getFont(num)
-  }
+  };
   getStyle (name) {
     if (!name) return Object.assign({}, this.parent.getStyle(), this.style)
     return this.style[name] != null ? this.style[name] : this.parent.getStyle(name)
-  }
+  };
   resetStyle () {
     this.style = {}
-  }
-  addContent (node) {
+  };
+  this.addContent = function(node) {
     if (typeof node.style == 'undefined') {
         node.style = Object.assign({}, this.getStyle());
     }
@@ -56,7 +55,7 @@ class RTFGroup {
         }
     }
     this.content.push(node)
-  }
-}
+  };
+};
 
 module.exports = RTFGroup
