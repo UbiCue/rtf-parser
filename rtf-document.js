@@ -2,44 +2,42 @@
 const RTFGroup = require('./rtf-group.js')
 const RTFParagraph = require('./rtf-paragraph.js')
 
-class RTFDocument extends RTFGroup {
-  constructor () {
-    super()
-    this.charset = 'ASCII'
-    this.ignorable = false
-    this.marginLeft = 1800
-    this.marginRight = 1800
-    this.marginBottom = 1440
-    this.marginTop = 1440
-    this.style = {
-      font: 0,
-      fontSize: 24,
-      bold: false,
-      italic: false,
-      underline: false,
-      strikethrough: false,
-      foreground: null,
-      background: null,
-      firstLineIndent: 0,
-      indent: 0,
-      align: 'left',
-      valign: 'normal'
-    }
+function RTFDocument() {
+  this = new RtfGroup();
+  this.charset = 'ASCII'
+  this.ignorable = false
+  this.marginLeft = 1800
+  this.marginRight = 1800
+  this.marginBottom = 1440
+  this.marginTop = 1440
+  this.style = {
+    font: 0,
+    fontSize: 24,
+    bold: false,
+    italic: false,
+    underline: false,
+    strikethrough: false,
+    foreground: null,
+    background: null,
+    firstLineIndent: 0,
+    indent: 0,
+    align: 'left',
+    valign: 'normal'
   }
-  get (name) {
+  get = function(name) {
     return this[name]
   }
-  getFont (num) {
+  getFont = function(num) {
     return this.fonts[num]
   }
-  getColor (num) {
+  getColor = function(num) {
     return this.colors[num]
   }
-  getStyle (name) {
+  getStyle = function(name) {
     if (!name) return this.style
     return this.style[name]
   }
-  addContent (node) {
+  this.addContent = function(node) {
     if (node instanceof RTFParagraph) {
       while (this.content.length && !(this.content[this.content.length - 1] instanceof RTFParagraph)) {
         node.content.unshift(this.content.pop())
