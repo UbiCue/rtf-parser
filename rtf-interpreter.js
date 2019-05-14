@@ -32,7 +32,7 @@ const codeToCP = {
 }
 
 function RTFInterpreter(document) {
-  this = new Writable({objectMode: true});
+  this = Writable({objectMode: true});
   this.doc = document
   this.parserState = this.parseTop
   this.groupStack = []
@@ -403,7 +403,7 @@ function Font() {
 }
 
 function ColorTable(parent) {
-  this - RTFGroup(parent);
+  this = RTFGroup(parent);
   this.table = []
   this.red = 0
   this.blue = 0
