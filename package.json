@@ -42,10 +42,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iarna/rtf-parser.git"
+    "url": "git+https://github.com/UbiCue/rtf-parser.git"
   },
   "bugs": {
-    "url": "https://github.com/iarna/rtf-parser/issues"
+    "url": "https://github.com/UbiCue/rtf-parser/issues"
   },
   "homepage": "https://npmjs.com/package/rtf-parser"
 }
