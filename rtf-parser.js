@@ -1,7 +1,7 @@
 'use strict'
 const Transform = require('readable-stream').Transform
 
-function RTFParser {
+function RTFParser() {
   //this = Transform({objectMode: true});
   this.objectMode = true;
   this.text = ''
