@@ -1,19 +1,17 @@
 'use strict'
 const Transform = require('readable-stream').Transform
 
-class RTFParser extends Transform {
-  constructor () {
-    super({objectMode: true})
-    this.text = ''
-    this.controlWord = ''
-    this.controlWordParam = ''
-    this.hexChar = ''
-    this.parserState = this.parseText
-    this.char = 0
-    this.row = 1
-    this.col = 1
-  }
-  _transform (buf, encoding, done) {
+function RTFParser {
+  this = Transform({objectMode: true});
+  this.text = ''
+  this.controlWord = ''
+  this.controlWordParam = ''
+  this.hexChar = ''
+  this.parserState = this.parseText
+  this.char = 0
+  this.row = 1
+  this.col = 1
+  this._transform = function(buf, encoding, done) {
     const text = buf.toString('ascii')
     for (let ii = 0; ii < text.length; ++ii) {
       ++this.char
@@ -27,11 +25,11 @@ class RTFParser extends Transform {
     }
     done()
   }
-  _flush (done) {
+  this._flush = function(done) {
     if (this.text !== '\u0000') this.emitText()
     done()
   }
-  parseText (char) {
+  parseText = function(char) {
     if (char === '\\') {
       this.parserState = this.parseEscapes
     } else if (char === '{') {
@@ -45,7 +43,7 @@ class RTFParser extends Transform {
     }
   }
 
-  parseEscapes (char) {
+  parseEscapes = function(char) {
     if (char === '\\' || char === '{' || char === '}') {
       this.text += char
       this.parserState = this.parseText
@@ -54,7 +52,7 @@ class RTFParser extends Transform {
       this.parseControlSymbol(char)
     }
   }
-  parseControlSymbol (char) {
+  parseControlSymbol = function(char) {
     if (char === '~') {
       this.text += '\u00a0' // nbsp
       this.parserState = this.parseText
@@ -84,7 +82,7 @@ class RTFParser extends Transform {
       this.parseControlWord(char)
     }
   }
-  parseHexChar (char) {
+  parseHexChar = function(char) {
     if (/^[A-Fa-f0-9]$/.test(char)) {
       this.hexChar += char
       if (this.hexChar.length >= 2) {
@@ -96,7 +94,7 @@ class RTFParser extends Transform {
       this.parserState = this.parseText
     }
   }
-  parseControlWord (char) {
+  parseControlWord = function(char) {
     if (char === ' ') {
       this.emitControlWord()
       this.parserState = this.parseText
@@ -111,7 +109,7 @@ class RTFParser extends Transform {
       this.parseText(char)
     }
   }
-  parseControlWordParam (char) {
+  parseControlWordParam = function(char) {
     if (/^\d$/.test(char)) {
       this.controlWordParam += char
     } else if (char === ' ') {
@@ -123,12 +121,12 @@ class RTFParser extends Transform {
       this.parseText(char)
     }
   }
-  emitText () {
+  emitText = function() {
     if (this.text === '') return
     this.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
     this.text = ''
   }
-  emitControlWord () {
+  emitControlWord = function() {
     this.emitText()
     if (this.controlWord === '') {
       this.emitError('empty control word')
@@ -145,28 +143,28 @@ class RTFParser extends Transform {
     this.controlWord = ''
     this.controlWordParam = ''
   }
-  emitStartGroup () {
+  emitStartGroup = function() {
     this.emitText()
     this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
-  emitEndGroup () {
+  emitEndGroup = function() {
     this.emitText()
     this.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
   }
-  emitIgnorable () {
+  emitIgnorable = function() {
     this.emitText()
     this.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
   }
-  emitHexChar () {
+  emitHexChar = function() {
     this.emitText()
     this.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
     this.hexChar = ''
   }
-  emitError (message) {
+  emitError = function(message) {
     this.emitText()
     this.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
   }
-  emitEndParagraph () {
+  emitEndParagraph = function() {
     this.emitText()
     this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
   }
