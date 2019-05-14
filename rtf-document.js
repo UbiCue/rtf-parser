@@ -3,7 +3,7 @@ const RTFGroup = require('./rtf-group.js')
 const RTFParagraph = require('./rtf-paragraph.js')
 
 function RTFDocument() {
-  this = RTFGroup.call(this, {});
+  RTFGroup.call(this, {});
   this.charset = 'ASCII'
   this.ignorable = false
   this.marginLeft = 1800
