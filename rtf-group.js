@@ -27,11 +27,11 @@ function RTFGroup(parent) {
   getColor = function(num) {
     return this.colors[num] != null ? this.colors[num] : this.parent.getFont(num)
   };
-  getStyle (name) {
+  getStyle = function(name) {
     if (!name) return Object.assign({}, this.parent.getStyle(), this.style)
     return this.style[name] != null ? this.style[name] : this.parent.getStyle(name)
   };
-  resetStyle () {
+  resetStyle = function() {
     this.style = {}
   };
   this.addContent = function(node) {
