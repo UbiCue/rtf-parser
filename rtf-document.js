@@ -37,12 +37,12 @@ function RTFDocument() {
     if (!name) return this.style
     return this.style[name]
   }
-  this.addContent = function(node) {
+  this.docAddContent = function(node) {
     if (node instanceof RTFParagraph) {
       while (this.content.length && !(this.content[this.content.length - 1] instanceof RTFParagraph)) {
         node.content.unshift(this.content.pop())
       }
-      super.addContent(node)
+      addContent(node)
       if (node.content.length) {
         const initialStyle = node.content[0].style
         const style = {}
@@ -75,7 +75,7 @@ function RTFDocument() {
         node.style = style
       }
     } else {
-      super.addContent(node)
+      addContent(node)
     }
   }
 }
