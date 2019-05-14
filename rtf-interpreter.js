@@ -2,7 +2,7 @@
 const assert = require('assert')
 const util = require('util')
 
-const Writable = require('readable-stream').Writable
+//const Writable = require('readable-stream').Writable
 const RTFGroup = require('./rtf-group.js')
 const RTFParagraph = require('./rtf-paragraph.js')
 const RTFSpan = require('./rtf-span.js')
@@ -32,7 +32,8 @@ const codeToCP = {
 }
 
 function RTFInterpreter(document) {
-  this = Writable({objectMode: true});
+  //this = Writable({objectMode: true});
+  this.objectMode = true;
   this.doc = document
   this.parserState = this.parseTop
   this.groupStack = []
@@ -387,7 +388,9 @@ function RTFInterpreter(document) {
 }
 
 function FontTable(parent) {
-  this = RTFGroup(parent);
+  //this = RTFGroup(parent);
+  RTFGroup.call(this, parent);
+  
   this.table = []
   this.currentFont = {family: 'roman', charset: 'ASCII', name: 'Serif'}
   this.addContent = function(text) {
@@ -403,7 +406,9 @@ function Font() {
 }
 
 function ColorTable(parent) {
-  this = RTFGroup(parent);
+  //this = RTFGroup(parent);
+  RTFGroup.call(this, parent);
+  
   this.table = []
   this.red = 0
   this.blue = 0
