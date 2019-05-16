@@ -24,16 +24,16 @@ function RTFDocument() {
     align: 'left',
     valign: 'normal'
   }
-  get = function(name) {
+  var get = function(name) {
     return this[name]
   }
-  getFont = function(num) {
+  var getFont = function(num) {
     return this.fonts[num]
   }
-  getColor = function(num) {
+  var getColor = function(num) {
     return this.colors[num]
   }
-  getStyle = function(name) {
+  var getStyle = function(name) {
     if (!name) return this.style
     return this.style[name]
   }
