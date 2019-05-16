@@ -30,7 +30,7 @@ function RTFParser() {
     if (this.text !== '\u0000') this.emitText()
     done()
   }
-  parseText = function(char) {
+  var parseText = function(char) {
     if (char === '\\') {
       this.parserState = this.parseEscapes
     } else if (char === '{') {
@@ -44,7 +44,7 @@ function RTFParser() {
     }
   }
 
-  parseEscapes = function(char) {
+  var parseEscapes = function(char) {
     if (char === '\\' || char === '{' || char === '}') {
       this.text += char
       this.parserState = this.parseText
@@ -53,7 +53,7 @@ function RTFParser() {
       this.parseControlSymbol(char)
     }
   }
-  parseControlSymbol = function(char) {
+  var parseControlSymbol = function(char) {
     if (char === '~') {
       this.text += '\u00a0' // nbsp
       this.parserState = this.parseText
@@ -83,7 +83,7 @@ function RTFParser() {
       this.parseControlWord(char)
     }
   }
-  parseHexChar = function(char) {
+  var parseHexChar = function(char) {
     if (/^[A-Fa-f0-9]$/.test(char)) {
       this.hexChar += char
       if (this.hexChar.length >= 2) {
@@ -95,7 +95,7 @@ function RTFParser() {
       this.parserState = this.parseText
     }
   }
-  parseControlWord = function(char) {
+  var parseControlWord = function(char) {
     if (char === ' ') {
       this.emitControlWord()
       this.parserState = this.parseText
@@ -110,7 +110,7 @@ function RTFParser() {
       this.parseText(char)
     }
   }
-  parseControlWordParam = function(char) {
+  var parseControlWordParam = function(char) {
     if (/^\d$/.test(char)) {
       this.controlWordParam += char
     } else if (char === ' ') {
@@ -122,12 +122,12 @@ function RTFParser() {
       this.parseText(char)
     }
   }
-  emitText = function() {
+  var emitText = function() {
     if (this.text === '') return
     this.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
     this.text = ''
   }
-  emitControlWord = function() {
+  var emitControlWord = function() {
     this.emitText()
     if (this.controlWord === '') {
       this.emitError('empty control word')
@@ -144,28 +144,28 @@ function RTFParser() {
     this.controlWord = ''
     this.controlWordParam = ''
   }
-  emitStartGroup = function() {
+  var emitStartGroup = function() {
     this.emitText()
     this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
-  emitEndGroup = function() {
+  var emitEndGroup = function() {
     this.emitText()
     this.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
   }
-  emitIgnorable = function() {
+  var emitIgnorable = function() {
     this.emitText()
     this.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
   }
-  emitHexChar = function() {
+  var emitHexChar = function() {
     this.emitText()
     this.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
     this.hexChar = ''
   }
-  emitError = function(message) {
+  var emitError = function(message) {
     this.emitText()
     this.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
   }
-  emitEndParagraph = function() {
+  var emitEndParagraph = function() {
     this.emitText()
     this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
   }
