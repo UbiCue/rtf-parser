@@ -2,7 +2,7 @@
 const assert = require('assert')
 const util = require('util')
 
-//const Writable = require('readable-stream').Writable
+const Writable = require('readable-stream').Writable
 const RTFGroup = require('./rtf-group.js')
 const RTFParagraph = require('./rtf-paragraph.js')
 const RTFSpan = require('./rtf-span.js')
@@ -33,6 +33,7 @@ const codeToCP = {
 
 function RTFInterpreter(document) {
   //this = Writable({objectMode: true});
+  Transform.call(this, {});
   this.objectMode = true;
   
   //Explicitly define once
