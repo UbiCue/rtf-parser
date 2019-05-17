@@ -66,7 +66,7 @@ function RTFInterpreter(document) {
     done()
   }
  
-  finisher = function() {
+  var finisher = function() {
     while (this.groupStack.length) this.cmd$groupEnd()
     const initialStyle = this.doc.content.length ? this.doc.content[0].style : []
     for (let prop of Object.keys(this.doc.style)) {
@@ -80,7 +80,7 @@ function RTFInterpreter(document) {
       if (match) this.doc.style[prop] = initialStyle[prop]
     }
   }
-  flushHexStore = function() {
+  var flushHexStore = function() {
     if (this.hexStore.length > 0) {
       let hexstr = this.hexStore.map(cmd => cmd.value).join('')
       this.group.addContent(new RTFSpan({
@@ -91,20 +91,20 @@ function RTFInterpreter(document) {
     }
   }
 
-  cmd$groupStart = function() {
+  var cmd$groupStart = function() {
     this.flushHexStore()
     if (this.group) this.groupStack.push(this.group)
     this.group = new RTFGroup(this.group || this.doc)
   }
-  cmd$ignorable = function() {
+  var cmd$ignorable = function() {
     this.flushHexStore()
     this.group.ignorable = true
   }
-  cmd$endParagraph = function() {
+  var cmd$endParagraph = function() {
     this.flushHexStore()
     this.group.addContent(new RTFParagraph())
   }
-  cmd$groupEnd = function() {
+  var cmd$groupEnd = function() {
     this.flushHexStore()
     const endingGroup = this.group
     this.group = this.groupStack.pop()
@@ -120,7 +120,7 @@ function RTFInterpreter(document) {
       process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
     }
   }
-  cmd$text = function(cmd) {
+  var cmd$text = function(cmd) {
     this.flushHexStore()
     if (!this.group) { // an RTF fragment, missing the {\rtf1 header
       this.group = this.doc
@@ -134,7 +134,7 @@ function RTFInterpreter(document) {
     cmd.style.italic = this.spanStyle.italic;
     this.group.addContent(new RTFSpan(cmd))
   }
-  cmd$controlWord = function(cmd) {
+  var cmd$controlWord = function(cmd) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value
@@ -146,53 +146,53 @@ function RTFInterpreter(document) {
       }
     }
   }
-  cmd$hexchar = function(cmd) {
+  var cmd$hexchar = function(cmd) {
     this.hexStore.push(cmd)
   }
-  cmd$error = function(cmd) {
+  var cmd$error = function(cmd) {
     this.emit('error', new Error('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.'))
   }
 
-  ctrl$rtf = function() {
+  var ctrl$rtf = function() {
     this.group = this.doc
   }
 
   // new line
-  ctrl$line = function() {
+  var ctrl$line = function() {
     this.group.addContent(new RTFSpan({ value: '\n' }))
   }
 
   // alignment
-  ctrl$qc = function() {
+  var ctrl$qc = function() {
     this.group.style.align = 'center'
   }
-  ctrl$qj = function() {
+  var ctrl$qj = function() {
     this.group.style.align = 'justify'
   }
-  ctrl$ql = function() {
+  var ctrl$ql = function() {
     this.group.style.align = 'left'
   }
-  ctrl$qr = function() {
+  var ctrl$qr = function() {
     this.group.style.align = 'right'
   }
 
   // text direction
-  ctrl$rtlch = function() {
+  var ctrl$rtlch = function() {
     this.group.style.dir = 'rtl'
   }
-  ctrl$ltrch = function() {
+  var ctrl$ltrch = function() {
     this.group.style.dir = 'ltr'
   }
 
   // general style
-  ctrl$par = function() {
+  var ctrl$par = function() {
     //Create new paragraph, starting from document styling
     this.group.addContent(new RTFParagraph(this.doc))
   }
-  ctrl$pard = function() {
+  var ctrl$pard = function() {
     this.group.resetStyle()
   }
-  ctrl$plain = function() {
+  var ctrl$plain = function() {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
     //When explicitly setting to plain, set all styles to false for group and span
     this.group.style.bold = false;
@@ -201,55 +201,55 @@ function RTFInterpreter(document) {
     this.spanStyle.bold = false;
     this.spanStyle.italic = false;
   }
-  ctrl$b = function(set) {
+  var ctrl$b = function(set) {
     this.group.style.bold = set !== 0
     this.spanStyle.bold = this.group.style.bold
   }
-  ctrl$i = function(set) {
+  var ctrl$i = function(set) {
     this.group.style.italic = set !== 0
     this.spanStyle.italic = this.group.style.italic
   }
-  ctrl$u = function(num) {
+  var ctrl$u = function(num) {
     var charBuf = Buffer.alloc ? Buffer.alloc(2) : new Buffer(2)
     // RTF, for reasons, represents unicode characters as signed integers
     // thus managing to match literally no one.
     charBuf.writeInt16LE(num, 0)
     this.group.addContent(new RTFSpan({value: iconv.decode(charBuf, 'ucs2')}))
   }
-  ctrl$super = function() {
+  var ctrl$super = function() {
     this.group.style.valign = 'super'
   }
-  ctrl$sub = function() {
+  var ctrl$sub = function() {
     this.group.style.valign = 'sub'
   }
-  ctrl$nosupersub = function() {
+  var ctrl$nosupersub = function() {
     this.group.style.valign = 'normal'
   }
-  ctrl$strike = function(set) {
+  var ctrl$strike = function(set) {
     this.group.style.strikethrough = set !== 0
   }
-  ctrl$ul = function(set) {
+  var ctrl$ul = function(set) {
     this.group.style.underline = set !== 0
   }
-  ctrl$ulnone = function(set) {
+  var ctrl$ulnone = function(set) {
     this.group.style.underline = false
   }
   ctrl$fi = function(value) {
     this.group.style.firstLineIndent = value
   }
-  ctrl$cufi = function(value) {
+  var ctrl$cufi = function(value) {
     this.group.style.firstLineIndent = value * 100
   }
-  ctrl$li = function(value) {
+  var ctrl$li = function(value) {
     this.group.style.indent = value
   }
   ctrl$lin = function(value) {
     this.group.style.indent = value
   }
-  ctrl$culi = function(value) {
+  var ctrl$culi = function(value) {
     this.group.style.indent = value * 100
   }
-  ctrl$tab = function() {
+  var ctrl$tab = function() {
       var spacer = { value: "&nbsp;", style: this.group.style };
       this.group.addContent(new RTFSpan(spacer));
   }
