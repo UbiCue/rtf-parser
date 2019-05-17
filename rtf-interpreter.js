@@ -33,7 +33,7 @@ const codeToCP = {
 
 function RTFInterpreter(document) {
   //this = Writable({objectMode: true});
-  Transform.call(this, {});
+  Writable.call(this, {});
   this.objectMode = true;
   
   //Explicitly define once
