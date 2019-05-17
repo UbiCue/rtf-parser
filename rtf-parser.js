@@ -170,6 +170,20 @@ function RTFParser() {
     this.emitText()
     this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
   }
+  
+  //Explicitly define once
+  this.once(context, fn) {
+    var result;
+
+    return function () {
+        if (fn) {
+            result = fn.apply(context || this, arguments);
+            fn = null;
+        }
+
+        return result;
+    }
+  }
 }
 
 module.exports = RTFParser
