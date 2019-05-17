@@ -50,6 +50,21 @@ function RTFInterpreter(document) {
     }
     done()
   }
+  
+  //Explicitly define once
+  this.once = function(context, fn) {
+    var result;
+
+    return function () {
+        if (fn) {
+            result = fn.apply(context || this, arguments);
+            fn = null;
+        }
+
+        return result;
+    }
+  }
+  
   finisher = function() {
     while (this.groupStack.length) this.cmd$groupEnd()
     const initialStyle = this.doc.content.length ? this.doc.content[0].style : []
@@ -425,19 +440,5 @@ function ColorTable(parent) {
     this.green = 0
   }
 }
-
-//Explicitly define once
-  this.once = function(context, fn) {
-    var result;
-
-    return function () {
-        if (fn) {
-            result = fn.apply(context || this, arguments);
-            fn = null;
-        }
-
-        return result;
-    }
-  }
 
 module.exports = RTFInterpreter
