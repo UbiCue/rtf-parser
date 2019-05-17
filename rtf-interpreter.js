@@ -426,4 +426,18 @@ function ColorTable(parent) {
   }
 }
 
+//Explicitly define once
+  this.once = function(context, fn) {
+    var result;
+
+    return function () {
+        if (fn) {
+            result = fn.apply(context || this, arguments);
+            fn = null;
+        }
+
+        return result;
+    }
+  }
+
 module.exports = RTFInterpreter
