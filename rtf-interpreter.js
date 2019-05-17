@@ -264,7 +264,7 @@ function RTFInterpreter(document) {
   var ctrl$pc = function() {
     this.group.charset = 'CP437'
   }
-  ctrl$pca = function() {
+  var ctrl$pca = function() {
     this.group.charset = 'CP850'
   }
   var ctrl$ansicpg = function(codepage) {
