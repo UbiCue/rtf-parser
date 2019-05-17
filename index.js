@@ -28,8 +28,8 @@ function parse (cb) {
   const parser = new RTFParser()
   parser.once('error', errorHandler)
   const interpreter = new RTFInterpreter(document)
-  interpreter.addEventListener('error', errorHandler)
-  interpreter.addEventListener('finish', () => {
+  $(interpreter).on('error', errorHandler)
+  $(interpreter).on('finish', () => {
     if (!errored) cb(null, document)
   })
   parser.pipe(interpreter)
