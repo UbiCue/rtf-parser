@@ -234,7 +234,7 @@ function RTFInterpreter(document) {
   var ctrl$ulnone = function(set) {
     this.group.style.underline = false
   }
-  ctrl$fi = function(value) {
+  var ctrl$fi = function(value) {
     this.group.style.firstLineIndent = value
   }
   var ctrl$cufi = function(value) {
@@ -243,7 +243,7 @@ function RTFInterpreter(document) {
   var ctrl$li = function(value) {
     this.group.style.indent = value
   }
-  ctrl$lin = function(value) {
+  var ctrl$lin = function(value) {
     this.group.style.indent = value
   }
   var ctrl$culi = function(value) {
@@ -255,19 +255,19 @@ function RTFInterpreter(document) {
   }
 
 // encodings
-  ctrl$ansi = function() {
+  var ctrl$ansi = function() {
     this.group.charset = 'ASCII'
   }
-  ctrl$mac = function() {
+  var ctrl$mac = function() {
     this.group.charset = 'MacRoman'
   }
-  ctrl$pc = function() {
+  var ctrl$pc = function() {
     this.group.charset = 'CP437'
   }
   ctrl$pca = function() {
     this.group.charset = 'CP850'
   }
-  ctrl$ansicpg = function(codepage) {
+  var ctrl$ansicpg = function(codepage) {
     if (availableCP.indexOf(codepage) === -1) {
       this.emit('error', new Error('Codepage ' + codepage + ' is not available.'))
     } else {
@@ -276,10 +276,10 @@ function RTFInterpreter(document) {
   }
 
 // fonts
-  ctrl$fonttbl = function() {
+  var ctrl$fonttbl = function() {
     this.group = new FontTable(this.group.parent)
   }
-  ctrl$f = function(num) {
+  var ctrl$f = function(num) {
     if (this.group instanceof FontTable) {
       this.group.currentFont = this.group.table[num] = new Font()
     } else if (this.group.parent instanceof FontTable) {
@@ -288,47 +288,47 @@ function RTFInterpreter(document) {
       this.group.style.font = num
     }
   }
-  ctrl$fnil = function() {
+  var ctrl$fnil = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'nil'
     }
   }
-  ctrl$froman = function() {
+  var ctrl$froman = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'roman'
     }
   }
-  ctrl$fswiss = function() {
+  var ctrl$fswiss = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'swiss'
     }
   }
-  ctrl$fmodern = function() {
+  var ctrl$fmodern = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'modern'
     }
   }
-  ctrl$fscript = function() {
+  var ctrl$fscript = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'script'
     }
   }
-  ctrl$fdecor = function() {
+  var ctrl$fdecor = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'decor'
     }
   }
-  ctrl$ftech = function() {
+  var ctrl$ftech = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'tech'
     }
   }
-  ctrl$fbidi = function() {
+  var ctrl$fbidi = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'bidi'
     }
   }
-  ctrl$fcharset = function(code) {
+  var ctrl$fcharset = function(code) {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       let charset = null
       if (code === 1) {
@@ -342,63 +342,63 @@ function RTFInterpreter(document) {
       this.group.get('currentFont').charset = charset
     }
   }
-  ctrl$fprq = function(pitch) {
+  var ctrl$fprq = function(pitch) {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').pitch = pitch
     }
   }
 
   // colors
-  ctrl$colortbl = function() {
+  var ctrl$colortbl = function() {
     this.group = new ColorTable(this.group.parent)
   }
-  ctrl$red = function(value) {
+  var ctrl$red = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.red = value
     }
   }
-  ctrl$blue = function(value) {
+  var ctrl$blue = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.blue = value
     }
   }
-  ctrl$green = function(value) {
+  var ctrl$green = function(value) {
     if (this.group instanceof ColorTable) {
       this.group.green = value
     }
   }
-  ctrl$cf = function(value) {
+  var ctrl$cf = function(value) {
     this.group.style.foreground = value
   }
-  ctrl$cb = function(value) {
+  var ctrl$cb = function(value) {
     this.group.style.background = value
   }
-  ctrl$fs = function(value) {
+  var ctrl$fs = function(value) {
     this.group.style.fontSize = value
   }
 
 // margins
-  ctrl$margl = function(value) {
+  var ctrl$margl = function(value) {
     this.doc.marginLeft = value
   }
-  ctrl$margr = function(value) {
+  var ctrl$margr = function(value) {
     this.doc.marginRight = value
   }
-  ctrl$margt = function(value) {
+  var ctrl$margt = function(value) {
     this.doc.marginTop = value
   }
-  ctrl$margb = function(value) {
+  var ctrl$margb = function(value) {
     this.doc.marginBottom = value
   }
 
 // unsupported (and we need to ignore content)
-  ctrl$stylesheet = function(value) {
+  var ctrl$stylesheet = function(value) {
     this.group.ignorable = true
   }
-  ctrl$info = function(value) {
+  var ctrl$info = function(value) {
     this.group.ignorable = true
   }
-  ctrl$mmathPr = function(value) {
+  var ctrl$mmathPr = function(value) {
     this.group.ignorable = true
   }
 }
