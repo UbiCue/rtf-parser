@@ -172,7 +172,7 @@ function RTFParser() {
   }
   
   //Explicitly define once
-  this.once(context, fn) {
+  this.once = function(context, fn) {
     var result;
 
     return function () {
