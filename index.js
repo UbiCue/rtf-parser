@@ -9,6 +9,8 @@ parse.stream = parseStream
 
 function parseString (string, cb) {
   //parse(cb).end(string)
+  console.log(string);
+  console.log(cb);
   var parser = parse(cb);
   var rtfParsed = parser.convert(string);
   
