@@ -173,7 +173,7 @@ function RTFParser() {
   }
   this.emitStartGroup = function() {
     this.emitText()
-    this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
+    push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
   this.emitEndGroup = function() {
     this.emitText()
