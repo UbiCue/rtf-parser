@@ -71,7 +71,7 @@ function RTFParser() {
     }
   }
 
-  var parseEscapes = function(char) {
+  this.parseEscapes = function(char) {
     if (char === '\\' || char === '{' || char === '}') {
       this.text += char
       this.parserState = this.parseText
@@ -80,7 +80,7 @@ function RTFParser() {
       this.parseControlSymbol(char)
     }
   }
-  var parseControlSymbol = function(char) {
+  this.parseControlSymbol = function(char) {
     if (char === '~') {
       this.text += '\u00a0' // nbsp
       this.parserState = this.parseText
@@ -110,7 +110,7 @@ function RTFParser() {
       this.parseControlWord(char)
     }
   }
-  var parseHexChar = function(char) {
+  this.parseHexChar = function(char) {
     if (/^[A-Fa-f0-9]$/.test(char)) {
       this.hexChar += char
       if (this.hexChar.length >= 2) {
@@ -122,7 +122,7 @@ function RTFParser() {
       this.parserState = this.parseText
     }
   }
-  var parseControlWord = function(char) {
+  this.parseControlWord = function(char) {
     if (char === ' ') {
       this.emitControlWord()
       this.parserState = this.parseText
@@ -137,7 +137,7 @@ function RTFParser() {
       this.parseText(char)
     }
   }
-  var parseControlWordParam = function(char) {
+  this.parseControlWordParam = function(char) {
     if (/^\d$/.test(char)) {
       this.controlWordParam += char
     } else if (char === ' ') {
@@ -149,12 +149,12 @@ function RTFParser() {
       this.parseText(char)
     }
   }
-  var emitText = function() {
+  this.emitText = function() {
     if (this.text === '') return
     this.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
     this.text = ''
   }
-  var emitControlWord = function() {
+  this.emitControlWord = function() {
     this.emitText()
     if (this.controlWord === '') {
       this.emitError('empty control word')
@@ -171,28 +171,28 @@ function RTFParser() {
     this.controlWord = ''
     this.controlWordParam = ''
   }
-  var emitStartGroup = function() {
+  this.emitStartGroup = function() {
     this.emitText()
     this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
-  var emitEndGroup = function() {
+  this.emitEndGroup = function() {
     this.emitText()
     this.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
   }
-  var emitIgnorable = function() {
+  this.emitIgnorable = function() {
     this.emitText()
     this.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
   }
-  var emitHexChar = function() {
+  this.emitHexChar = function() {
     this.emitText()
     this.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
     this.hexChar = ''
   }
-  var emitError = function(message) {
+  this.emitError = function(message) {
     this.emitText()
     this.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
   }
-  var emitEndParagraph = function() {
+  this.emitEndParagraph = function() {
     this.emitText()
     this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
   }
