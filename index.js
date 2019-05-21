@@ -13,6 +13,7 @@ function parseString (string, cb) {
   console.log(cb);
   var parser = parse(cb);
   var rtfParsed = parser.convert(string);
+  console.log(rtfParsed);
   
   const document = new RTFDocument()
   const interpreter = new RTFInterpreter(document)
@@ -27,6 +28,8 @@ function parseString (string, cb) {
   for (var i = 0; i < rtfParsed.length; i++) {
       interpreter.write(rtfParsed[i], null);
   }
+  
+  comsole.log(document);
 
   cb(null, document);
 }
