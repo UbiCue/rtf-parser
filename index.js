@@ -26,7 +26,7 @@ function parseString (string, cb) {
       interpreter.write(rtfParsed[i], null);
   }
   
-  comsole.log(document);
+  console.log(document);
 
   cb(null, document);
 }
