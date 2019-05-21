@@ -9,13 +9,7 @@ function RTFParser() {
   this.controlWord = ''
   this.controlWordParam = ''
   this.hexChar = ''
-  console.log(typeof this.parserState);
-            console.log(typeof this.parseText);
-            console.log(this.parserState == this.parseText);
   this.parserState = this.parseText
-  console.log(typeof this.parserState);
-            console.log(typeof this.parseText);
-            console.log(this.parserState == this.parseText);
   this.char = 0
   this.row = 1
   this.col = 1
@@ -38,6 +32,15 @@ function RTFParser() {
     done()
   }
   this.convert = function(text) {
+        this.objectMode = true;
+        this.text = ''
+        this.controlWord = ''
+        this.controlWordParam = ''
+        this.hexChar = ''
+        this.parserState = this.parseText
+        this.char = 0
+        this.row = 1
+        this.col = 1
         for (let ii = 0; ii < text.length; ++ii) {
             ++this.char
             if (text[ii] === '\n') {
