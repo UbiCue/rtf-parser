@@ -3,7 +3,7 @@ const Transform = require('readable-stream').Transform
 
 function RTFParser() {
   //this = Transform({objectMode: true});
-  Transform.call(this, {});
+  
   this.objectMode = true;
   this.text = ''
   this.controlWord = ''
@@ -32,6 +32,7 @@ function RTFParser() {
     done()
   }
   this.convert = function(text) {
+        Transform.call(this, {});
         this.objectMode = true;
         this.text = ''
         this.controlWord = ''
@@ -173,7 +174,7 @@ function RTFParser() {
   }
   this.emitStartGroup = function() {
     this.emitText()
-    push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
+    this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
   this.emitEndGroup = function() {
     this.emitText()
