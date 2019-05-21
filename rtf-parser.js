@@ -9,7 +9,13 @@ function RTFParser() {
   this.controlWord = ''
   this.controlWordParam = ''
   this.hexChar = ''
+  console.log(typeof this.parserState);
+            console.log(typeof this.parseText);
+            console.log(this.parserState == this.parseText);
   this.parserState = this.parseText
+  console.log(typeof this.parserState);
+            console.log(typeof this.parseText);
+            console.log(this.parserState == this.parseText);
   this.char = 0
   this.row = 1
   this.col = 1
