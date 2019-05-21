@@ -66,6 +66,15 @@ function RTFInterpreter(document) {
     }
     done()
   }
+  this.write = function(cmd, encoding) {
+        const method = 'cmd$' + cmd.type.replace(/-(.)/g, (_, char) => char.toUpperCase());
+        if (this[method]) {
+            this[method](cmd)
+        } else {
+            //process.emit('error', `Unknown RTF command ${cmd.type}, tried ${method}`)
+            console.log(`Unknown RTF command ${cmd.type}, tried ${method}`);
+        }
+    }
  
   var finisher = function() {
     while (this.groupStack.length) this.cmd$groupEnd()
