@@ -40,6 +40,9 @@ function RTFParser() {
             } else {
                 ++this.col
             }
+            console.log(typeof this.parserState);
+            console.log(typeof this.parseText);
+            console.log(this.parserState == this.parseText);
             this.parserState(text[ii])
         }
 
