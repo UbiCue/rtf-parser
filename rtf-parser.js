@@ -31,7 +31,7 @@ function RTFParser() {
     if (this.text !== '\u0000') this.emitText()
     done()
   }
-  this.convert(text) {
+  this.convert = function(text) {
         for (let ii = 0; ii < text.length; ++ii) {
             ++this.char
             if (text[ii] === '\n') {
