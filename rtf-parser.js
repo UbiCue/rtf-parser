@@ -45,7 +45,7 @@ function RTFParser() {
 
         return (this.fullText);
     }
-  var parseText = function(char) {
+  this.parseText = function(char) {
     if (char === '\\') {
       this.parserState = this.parseEscapes
     } else if (char === '{') {
