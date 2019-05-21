@@ -9,21 +9,18 @@ parse.stream = parseStream
 
 function parseString (string, cb) {
   //parse(cb).end(string)
-  console.log(string);
-  console.log(cb);
   var parser = parse(cb);
   var rtfParsed = parser.convert(string);
-  console.log(rtfParsed);
   
   const document = new RTFDocument()
   const interpreter = new RTFInterpreter(document)
 
-  const errorHandler = err => {
+  /*****const errorHandler = err => {
       if (errored) return
       errored = true
       cb(err)
   };
-  interpreter.setErrorHandler(errorHandler);
+  interpreter.setErrorHandler(errorHandler);****/
 
   for (var i = 0; i < rtfParsed.length; i++) {
       interpreter.write(rtfParsed[i], null);
