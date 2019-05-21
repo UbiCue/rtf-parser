@@ -31,6 +31,20 @@ function RTFParser() {
     if (this.text !== '\u0000') this.emitText()
     done()
   }
+  this.convert(text) {
+        for (let ii = 0; ii < text.length; ++ii) {
+            ++this.char
+            if (text[ii] === '\n') {
+                ++this.row
+                this.col = 1
+            } else {
+                ++this.col
+            }
+            this.parserState(text[ii])
+        }
+
+        return (this.fullText);
+    }
   var parseText = function(char) {
     if (char === '\\') {
       this.parserState = this.parseEscapes
