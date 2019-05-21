@@ -4,7 +4,7 @@ const Transform = require('readable-stream').Transform
 function RTFParser() {
   //this = Transform({objectMode: true});
   
-  this.objectMode = true;
+  /*this.objectMode = true;
   this.text = ''
   this.controlWord = ''
   this.controlWordParam = ''
@@ -12,7 +12,7 @@ function RTFParser() {
   this.parserState = this.parseText
   this.char = 0
   this.row = 1
-  this.col = 1
+  this.col = 1*/
   this._transform = function(buf, encoding, done) {
     const text = buf.toString('ascii')
     for (let ii = 0; ii < text.length; ++ii) {
@@ -33,6 +33,7 @@ function RTFParser() {
   }
   this.convert = function(text) {
         Transform.call(this, {});
+        this.fullText = []
         this.objectMode = true;
         this.text = ''
         this.controlWord = ''
@@ -152,7 +153,7 @@ function RTFParser() {
   }
   this.emitText = function() {
     if (this.text === '') return
-    this.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'text', value: this.text, pos: this.char, row: this.row, col: this.col})
     this.text = ''
   }
   this.emitControlWord = function() {
@@ -160,7 +161,7 @@ function RTFParser() {
     if (this.controlWord === '') {
       this.emitError('empty control word')
     } else {
-      this.push({
+      this.fullText.push({
         type: 'control-word',
         value: this.controlWord,
         param: this.controlWordParam !== '' && Number(this.controlWordParam),
@@ -174,28 +175,28 @@ function RTFParser() {
   }
   this.emitStartGroup = function() {
     this.emitText()
-    this.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'group-start', pos: this.char, row: this.row, col: this.col})
   }
   this.emitEndGroup = function() {
     this.emitText()
-    this.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'group-end', pos: this.char, row: this.row, col: this.col})
   }
   this.emitIgnorable = function() {
     this.emitText()
-    this.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'ignorable', pos: this.char, row: this.row, col: this.col})
   }
   this.emitHexChar = function() {
     this.emitText()
-    this.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'hexchar', value: this.hexChar, pos: this.char, row: this.row, col: this.col})
     this.hexChar = ''
   }
   this.emitError = function(message) {
     this.emitText()
-    this.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
+    this.fullText.push({type: 'error', value: message, row: this.row, col: this.col, char: this.char, stack: new Error().stack})
   }
   this.emitEndParagraph = function() {
     this.emitText()
-    this.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
+    this.fullText.push({type: 'end-paragraph', pos: this.char, row: this.row, col: this.col})
   }
   
   //Explicitly define once
