@@ -355,7 +355,8 @@ function RTFInterpreter(document) {
         charset = codeToCP[code]
       }
       if (charset == null) {
-        return this.emit('error', new Error('Unsupported charset code #' + code))
+      	console.log('Unsupported charset code #' + code);
+        //return this.emit('error', new Error('Unsupported charset code #' + code))
       }
       this.group.get('currentFont').charset = charset
     }
