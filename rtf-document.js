@@ -42,7 +42,7 @@ function RTFDocument() {
       while (this.content.length && !(this.content[this.content.length - 1] instanceof RTFParagraph)) {
         node.content.unshift(this.content.pop())
       }
-      addContent(node)
+      this.addContent(node)
       if (node.content.length) {
         const initialStyle = node.content[0].style
         const style = {}
