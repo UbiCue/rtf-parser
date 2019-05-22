@@ -130,7 +130,7 @@ function RTFInterpreter(document) {
       process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
     }
   }
-  var cmd$text = function(cmd) {
+  this.cmd$text = function(cmd) {
     this.flushHexStore()
     if (!this.group) { // an RTF fragment, missing the {\rtf1 header
       this.group = this.doc
@@ -144,7 +144,7 @@ function RTFInterpreter(document) {
     cmd.style.italic = this.spanStyle.italic;
     this.group.addContent(new RTFSpan(cmd))
   }
-  var cmd$controlWord = function(cmd) {
+  this.cmd$controlWord = function(cmd) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value
