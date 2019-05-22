@@ -45,7 +45,7 @@ function RTFDocument() {
       this.addContent(node)
       if (node.content.length) {
         const initialStyle = node.content[0].style
-        const style = {}
+        var style = {}
         if (typeof node.style !== 'undefined' && node.style != null) {
             style = node.style;
         }
