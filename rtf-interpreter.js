@@ -168,7 +168,8 @@ function RTFInterpreter(document) {
     this.hexStore.push(cmd)
   }
   this.cmd$error = function(cmd) {
-    this.emit('error', new Error('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.'))
+    console.log('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.');
+    //this.emit('error', new Error('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.'))
   }
 
   this.ctrl$rtf = function() {
@@ -287,9 +288,10 @@ function RTFInterpreter(document) {
   }
   this.ctrl$ansicpg = function(codepage) {
     if (availableCP.indexOf(codepage) === -1) {
-      this.emit('error', new Error('Codepage ' + codepage + ' is not available.'))
+    	console.log('Codepage ' + codepage + ' is not available.');
+      	//this.emit('error', new Error('Codepage ' + codepage + ' is not available.'))
     } else {
-      this.group.charset = 'CP' + codepage
+      	this.group.charset = 'CP' + codepage
     }
   }
 
