@@ -18,20 +18,20 @@ function RTFGroup(parent) {
   }
   this.ignorable = null
 
-  var get = function(name) {
+  this.get = function(name) {
     return this[name] != null ? this[name] : this.parent.get(name)
   };
-  var getFont = function(num) {
+  this.getFont = function(num) {
     return this.fonts[num] != null && this.fonts[num] !== undefined ? this.fonts[num] : this.parent.getFont(num)
   };
-  var getColor = function(num) {
+  this.getColor = function(num) {
     return this.colors[num] != null ? this.colors[num] : this.parent.getFont(num)
   };
-  var getStyle = function(name) {
+  this.getStyle = function(name) {
     if (!name) return Object.assign({}, this.parent.getStyle(), this.style)
     return this.style[name] != null ? this.style[name] : this.parent.getStyle(name)
   };
-  var resetStyle = function() {
+  this.resetStyle = function() {
     this.style = {}
   };
   this.addContent = function(node) {
