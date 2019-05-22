@@ -173,7 +173,7 @@ function RTFInterpreter(document) {
   }
 
   this.ctrl$rtf = function() {
-    this.group = this.doc
+    //this.group = this.doc
   }
 
   // new line
