@@ -75,7 +75,7 @@ function RTFDocument() {
         node.style = style
       }
     } else {
-      addContent(node)
+      this.addContent(node)
     }
   }
 }
