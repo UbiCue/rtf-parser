@@ -125,12 +125,18 @@ function RTFInterpreter(document) {
       doc.colors = endingGroup.table
     } else if (endingGroup !== this.doc && !endingGroup.get('ignorable')) {
       for (const item of endingGroup.content) {
-        console.log(typeof doc);
-        console.log(typeof doc.docAddContent);
-        doc.docAddContent(item)
+        this.addContent(doc, item);
       }
       process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
     }
+  }
+  this.addContent = function(destination, content) {
+	  if (typeof destination.docAddContent !== 'undefined') {
+			destination.docAddContent(content)
+		}
+		else if (typeof destination.addContent !== 'undefined') {
+			destination.addContent(content);
+		}
   }
   this.cmd$text = function(cmd) {
     this.flushHexStore()
