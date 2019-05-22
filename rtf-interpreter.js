@@ -125,6 +125,8 @@ function RTFInterpreter(document) {
       doc.colors = endingGroup.table
     } else if (endingGroup !== this.doc && !endingGroup.get('ignorable')) {
       for (const item of endingGroup.content) {
+        console.log(typeof doc);
+        console.log(typeof doc.docAddContent);
         doc.docAddContent(item)
       }
       process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
