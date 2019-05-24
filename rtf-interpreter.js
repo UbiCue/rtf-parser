@@ -57,7 +57,7 @@ function RTFInterpreter(document) {
   this.once('prefinish', function () { this.finisher(); })
   this.hexStore = []
   this.spanStyle = {}
-  this.deriveCmd = function(type) {
+  this.deriveCmd = function(type, prefix) {
 	let command = '';
 		for (var i=0; i<type.length; i++) {
 			if ((type[i] == '-') && (i<type.length+1)) {
@@ -69,10 +69,10 @@ function RTFInterpreter(document) {
 			}
 		}
 		//const method = 'cmd$' + cmd.type.replace(/-(.)/g, (_, char) => char.toUpperCase());
-		return 'cmd$'+command;
+		return prefix+'$'+command;
 	}
 	this._write = function(cmd, encoding, done) {
-		let method = this.deriveCmd(cmd.type);
+		let method = this.deriveCmd(cmd.type, 'cmd');
 		if (this[method]) {
 		  this[method](cmd)
 		} else {
@@ -82,7 +82,7 @@ function RTFInterpreter(document) {
 	}
 	this.write = function(cmd, encoding) {
 		//const method = 'cmd$' + cmd.type.replace(/-(.)/g, (_, char) => char.toUpperCase());
-		let method = this.deriveCmd(cmd.type);
+		let method = this.deriveCmd(cmd.type, 'cmd');
 		if (this[method]) {
 			this[method](cmd)
 		} else {
@@ -174,10 +174,7 @@ function RTFInterpreter(document) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value;
-	console.log(cmd.value);
-      	const method = this.deriveCmd(cmd.value);
-	console.log(method);
-	console.log('ctrl$' + cmd.value.replace(/-(.)/g, (_, char) => char.toUpperCase()));
+      	const method = this.deriveCmd(cmd.value, 'ctrl');
       	if (this[method]) {
         	this[method](cmd.param)
       	} else {
