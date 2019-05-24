@@ -132,20 +132,21 @@ function RTFInterpreter(document) {
     this.group.addContent(new RTFParagraph())
   }
   this.cmd$groupEnd = function() {
-    this.flushHexStore()
-    const endingGroup = this.group
-    this.group = this.groupStack.pop()
-    const doc = this.group || this.doc
-    if (endingGroup instanceof FontTable) {
-      doc.fonts = endingGroup.table
-    } else if (endingGroup instanceof ColorTable) {
-      doc.colors = endingGroup.table
-    } else if (endingGroup !== this.doc && !endingGroup.get('ignorable')) {
-      for (const item of endingGroup.content) {
-        this.addContent(doc, item);
-      }
-      process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
-    }
+	this.flushHexStore()
+	const endingGroup = this.group
+	this.group = this.groupStack.pop()
+	const doc = this.group || this.doc
+	if (endingGroup instanceof FontTable) {
+		doc.fonts = endingGroup.table
+	} else if (endingGroup instanceof ColorTable) {
+		doc.colors = endingGroup.table
+	} else if (endingGroup !== this.doc && !endingGroup.get('ignorable')) {
+		for (var i=0; i<endingGroup.content.length; i++) {
+			var item = endingGroup.content[i];
+			this.addContent(doc, item);
+		}
+		process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
+	}
   }
   this.addContent = function(destination, content) {
 	  if (typeof destination.docAddContent !== 'undefined') {
@@ -173,7 +174,7 @@ function RTFInterpreter(document) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value
-      const method = 'ctrl$' + cmd.value.replace(/-(.)/g, (_, char) => char.toUpperCase())
+      const method = deriveCmd(cmd.value);
       if (this[method]) {
         this[method](cmd.param)
       } else {
