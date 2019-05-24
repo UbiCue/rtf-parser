@@ -54,7 +54,7 @@ function RTFInterpreter(document) {
   this.parserState = this.parseTop
   this.groupStack = []
   this.group = null
-  this.once('prefinish', () => this.finisher())
+  this.once('prefinish', function () { this.finisher(); })
   this.hexStore = []
   this.spanStyle = {}
   this._write = function(cmd, encoding, done) {
