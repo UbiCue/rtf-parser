@@ -117,7 +117,7 @@ function RTFParser() {
         this.parserState = this.parseText
       }
     } else {
-      this.emitError(`Invalid character "${char}" in hex literal.`)
+      this.emitError("Invalid character "+char+" in hex literal.")
       this.parserState = this.parseText
     }
   }
