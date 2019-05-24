@@ -35,7 +35,7 @@ function parseStream (stream, cb) {
 
 function parse (cb) {
   let errored = false
-  const errorHandler = err => {
+  const errorHandler = function (err) {
     if (errored) return
     errored = true
     //parser.unpipe(interpreter)
