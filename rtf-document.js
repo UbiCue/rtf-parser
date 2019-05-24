@@ -61,10 +61,10 @@ function RTFDocument() {
         if (typeof style.background === 'undefined' || style.background == null) {
             style.background = this.getColor(initialStyle.background);
         }
-        for (var prop of Object.keys(initialStyle)) {
+        for (prop in Object.keys(initialStyle)) {
           if (initialStyle[prop] == null) continue
           let match = true
-          for (var span of node.content) {
+          for (span in node.content) {
             if (initialStyle[prop] !== span.style[prop]) {
               match = false
               break
