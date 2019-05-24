@@ -109,7 +109,7 @@ function RTFInterpreter(document) {
 	}
   this.flushHexStore = function() {
     if (this.hexStore.length > 0) {
-      let hexstr = this.hexStore.map(cmd => cmd.value).join('')
+      let hexstr = this.hexStore.map(function(cmd) { cmd.value }).join('')
       this.group.addContent(new RTFSpan({
         value: iconv.decode(
           Buffer.from(hexstr, 'hex'), this.group.get('charset'))
