@@ -174,7 +174,7 @@ function RTFInterpreter(document) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
       if (!this.group.type) this.group.type = cmd.value
-      const method = deriveCmd(cmd.value);
+      const method = this.deriveCmd(cmd.value);
       if (this[method]) {
         this[method](cmd.param)
       } else {
