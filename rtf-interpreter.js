@@ -173,14 +173,17 @@ function RTFInterpreter(document) {
   this.cmd$controlWord = function(cmd) {
     this.flushHexStore()
     if (typeof this.group !== 'undefined' && this.group !== null) {
-      if (!this.group.type) this.group.type = cmd.value
-      const method = this.deriveCmd(cmd.value);
-      if (this[method]) {
-        this[method](cmd.param)
-      } else {
-        if (!this.group.get('ignorable')) process.emit('debug', method, cmd.param)
+      if (!this.group.type) this.group.type = cmd.value;
+	console.log(cmd.value);
+      	const method = this.deriveCmd(cmd.value);
+	console.log(method);
+	console.log('ctrl$' + cmd.value.replace(/-(.)/g, (_, char) => char.toUpperCase()));
+      	if (this[method]) {
+        	this[method](cmd.param)
+      	} else {
+        	if (!this.group.get('ignorable')) process.emit('debug', method, cmd.param)
+      	}
       }
-    }
   }
   this.cmd$hexchar = function(cmd) {
     this.hexStore.push(cmd)
