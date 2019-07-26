@@ -166,9 +166,14 @@ function RTFInterpreter(document) {
         cmd.style = this.group.style;
     }
     //Update any styling specified for the current span
-    cmd.style.bold = this.spanStyle.bold;
-    cmd.style.italic = this.spanStyle.italic;
-    this.group.addContent(new RTFSpan(cmd))
+    var newSpan = new RTFSpan(cmd);
+    newSpan.style.foreground = this.spanStyle.foreground;
+    newSpan.style.bold = this.spanStyle.bold;
+    newSpan.style.italic = this.spanStyle.italic;
+    //cmd.style.bold = this.spanStyle.bold;
+    //cmd.style.italic = this.spanStyle.italic;
+    //this.group.addContent(new RTFSpan(cmd));
+    this.group.addContent(newSpan);
   }
   this.cmd$controlWord = function(cmd) {
     this.flushHexStore()
@@ -237,6 +242,7 @@ function RTFInterpreter(document) {
     this.group.style.underline = false;
     this.spanStyle.bold = false;
     this.spanStyle.italic = false;
+    this.spanStyle.foreground = {red: 0, blue: 0, green: 0};
   }
   this.ctrl$b = function(set) {
     this.group.style.bold = set !== 0
@@ -407,7 +413,8 @@ function RTFInterpreter(document) {
     }
   }
   this.ctrl$cf = function(value) {
-    this.group.style.foreground = value
+    //this.group.style.foreground = value
+    this.spanStyle.foreground = value;
   }
   this.ctrl$cb = function(value) {
     this.group.style.background = value
