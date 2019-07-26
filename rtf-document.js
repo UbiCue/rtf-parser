@@ -42,37 +42,36 @@ function RTFDocument() {
       while (this.content.length && !(this.content[this.content.length - 1] instanceof RTFParagraph)) {
         node.content.unshift(this.content.pop())
       }
-      this.addContent(node)
+      this.addContent(node);
       if (node.content.length) {
-        const initialStyle = node.content[0].style
-        var style = {}
+        const initialStyle = node.content[0].style;
+        var style = {};
         if (typeof node.style !== 'undefined' && node.style != null) {
             style = node.style;
-        }
-        else {
-            style = {};
         }
         if (typeof style.font === 'undefined' || style.font == null) {
             style.font = this.getFont(initialStyle.font);
         }
-        if (typeof style.foreground === 'undefined' || style.foreground == null) {
+        /*if (typeof style.foreground === 'undefined' || style.foreground == null) {
             style.foreground = this.getColor(initialStyle.foreground);
         }
         if (typeof style.background === 'undefined' || style.background == null) {
             style.background = this.getColor(initialStyle.background);
-        }
+        }*/
         for (var i=0; i<Object.keys(initialStyle).length; i++) {
           let prop = Object.keys(initialStyle)[i];
-          if (initialStyle[prop] == null) continue
-          let match = true
-          for (var j=0; j<node.content.length; j++) {
-            let span = node.content[j];
-            if (initialStyle[prop] !== span.style[prop]) {
+          //if (initialStyle[prop] == null) continue
+          if ((prop !== 'foreground' && prop != 'background') && (initialStyle[prop] !== null)) {
+            let match = true
+            for (var j=0; j<node.content.length; j++) {
+              let span = node.content[j];
+              if (initialStyle[prop] !== span.style[prop]) {
                 match = false
                 break
+              }
             }
+            if (match) style[prop] = initialStyle[prop]
           }
-          if (match) style[prop] = initialStyle[prop]
         }
         node.style = style
       }
