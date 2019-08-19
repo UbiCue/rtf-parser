@@ -53,6 +53,16 @@ function RTFParser() {
             }
             this.parserState(text[ii])
         }
+    
+        //Text should end with a paragraph tag and an end-group marker;
+        //If those are not present at the end, add them
+        if (this.fullText[this.fullText.length-1].type != 'group-end') {
+			    this.controlWord = "par";
+			    this.controlWordParam = "";
+			    this.emitControlWord();
+			
+			    this.emitEndGroup();
+		    }
 
         return (this.fullText);
     }
