@@ -201,7 +201,7 @@ function RTFInterpreter(document) {
 
   // new line
   this.ctrl$line = function() {
-    this.group.addContent(new RTFSpan({ value: '\n' }))
+    this.group.addContent(new RTFParagraph())
   }
 
   // alignment
