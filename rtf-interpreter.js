@@ -35,6 +35,7 @@ function RTFInterpreter(document) {
   //this = Writable({objectMode: true});
   Writable.call(this, {});
   this.objectMode = true;
+  this.txfieldend = false;
   
   //Explicitly define once
   this.once = function(context, fn) {
@@ -140,7 +141,7 @@ function RTFInterpreter(document) {
 		doc.fonts = endingGroup.table
 	} else if (endingGroup instanceof ColorTable) {
 		doc.colors = endingGroup.table
-	} else if (endingGroup !== this.doc && !endingGroup.get('ignorable')) {
+	} else if (endingGroup !== undefined && endingGroup !== this.doc && !endingGroup.get('ignorable')) {
 		for (var i=0; i<endingGroup.content.length; i++) {
 			var item = endingGroup.content[i];
 			this.addContent(doc, item);
@@ -202,6 +203,28 @@ function RTFInterpreter(document) {
   // new line
   this.ctrl$line = function() {
     this.group.addContent(new RTFParagraph())
+  }
+
+  this.ctrl$txfieldend = function(cmd) {
+	this.txfieldend = true;
+  
+	for (var i=0; i< this.groupStack.length; i++) {
+		if ((this.groupStack[i] !== undefined) 
+				&& (this.groupStack[i].content !== undefined) 
+				&& (this.groupStack[i].content.length > 0)) {
+			for (var j=0; j<this.groupStack[i].content.length; j++) {
+				var item = this.groupStack[i].content[j];
+				this.addContent(this.doc, item);
+			}
+		}
+  	}
+	  
+  	this.flushHexStore();	
+	if (this.group !== undefined && this.group.content !== undefined && this.group.content.length > 0) {
+		this.addContent(this.doc, this.group);
+	}
+
+	//process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
   }
 
   // alignment
