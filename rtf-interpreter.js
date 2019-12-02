@@ -206,6 +206,8 @@ function RTFInterpreter(document) {
   }
 
   this.ctrl$txfieldend = function(cmd) {
+	//On txfieldend, add all content that we've found thus far to the document,
+	//and remember that we've found a txfieldend tag
 	this.txfieldend = true;
   
 	for (var i=0; i< this.groupStack.length; i++) {
