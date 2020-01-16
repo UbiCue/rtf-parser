@@ -61,7 +61,9 @@ function RTFDocument() {
         for (var i=0; i<Object.keys(initialStyle).length; i++) {
           let prop = Object.keys(initialStyle)[i];
           //if (initialStyle[prop] == null) continue
-          if ((prop !== 'foreground' && prop != 'background') && (initialStyle[prop] !== null)) {
+          //Don't carry over styles to the node level that should be handled at the span level
+          //or for which the style doesn't actually have a setting
+          if ((prop !== 'foreground' && prop != 'background' && prop != 'underline' && prop != 'bold' && prop != 'italic') && (initialStyle[prop] !== null)) {
             let match = true
             for (var j=0; j<node.content.length; j++) {
               let span = node.content[j];
