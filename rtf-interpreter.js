@@ -35,7 +35,8 @@ function RTFInterpreter(document) {
   //this = Writable({objectMode: true});
   Writable.call(this, {});
   this.objectMode = true;
-  this.txfieldend = false;
+  this.inTxField = false;
+  this.abandonDocument = false;
   
   //Explicitly define once
   this.once = function(context, fn) {
@@ -141,7 +142,7 @@ function RTFInterpreter(document) {
 		doc.fonts = endingGroup.table
 	} else if (endingGroup instanceof ColorTable) {
 		doc.colors = endingGroup.table
-	} else if (endingGroup !== undefined && endingGroup !== this.doc && !endingGroup.get('ignorable')) {
+	} else if (endingGroup !== undefined && endingGroup != null && endingGroup !== this.doc && !endingGroup.get('ignorable')) {
 		for (var i=0; i<endingGroup.content.length; i++) {
 			var item = endingGroup.content[i];
 			this.addContent(doc, item);
@@ -150,11 +151,14 @@ function RTFInterpreter(document) {
 	}
   }
   this.addContent = function(destination, content) {
-	  if (typeof destination.docAddContent !== 'undefined') {
-			destination.docAddContent(content)
-		}
-		else if (typeof destination.addContent !== 'undefined') {
-			destination.addContent(content);
+		//Don't add any content while in a TxField
+		if (!this.inTxField) {
+			if (typeof destination.docAddContent !== 'undefined') {
+				destination.docAddContent(content)
+			}
+			else if (typeof destination.addContent !== 'undefined') {
+				destination.addContent(content);
+			}
 		}
   }
   this.cmd$text = function(cmd) {
@@ -205,28 +209,54 @@ function RTFInterpreter(document) {
     this.group.addContent(new RTFParagraph())
   }
 
-  this.ctrl$txfieldend = function(cmd) {
-	//On txfieldend, add all content that we've found thus far to the document,
-	//and remember that we've found a txfieldend tag
-	this.txfieldend = true;
-  
-	for (var i=0; i< this.groupStack.length; i++) {
-		if ((this.groupStack[i] !== undefined) 
-				&& (this.groupStack[i].content !== undefined) 
-				&& (this.groupStack[i].content.length > 0)) {
-			for (var j=0; j<this.groupStack[i].content.length; j++) {
-				var item = this.groupStack[i].content[j];
-				this.addContent(this.doc, item);
+  this.addAllStoredContent = function() {
+		for (var i=0; i< this.groupStack.length; i++) {
+			if ((this.groupStack[i] !== undefined) 
+					&& (this.groupStack[i].content !== undefined) 
+					&& (this.groupStack[i].content.length > 0)) {
+				for (var j=0; j<this.groupStack[i].content.length; j++) {
+					var item = this.groupStack[i].content[j];
+					this.addContent(this.doc, item);
+				}
 			}
 		}
-  	}
-	  
-  	this.flushHexStore();	
-	if (this.group !== undefined && this.group.content !== undefined && this.group.content.length > 0) {
-		this.addContent(this.doc, this.group);
-	}
+		  
+		this.flushHexStore();	
+		if (this.group !== undefined && this.group.content !== undefined && this.group.content.length > 0) {
+			this.addContent(this.doc, this.group);
+		}
+  }
+  
+  this.clearUnstoredContent = function() {
+		this.flushHexStore();
+		this.groupStack.length = 0;
+		this.group = null;
+  }
 
-	//process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
+  this.ctrl$txfieldstart = function(cmd) {
+	  //If we encounter a txfield, add all content that we've found thus far to the document,
+	  //and flag to ignore anything inside the txfield
+	  
+	  this.addAllStoredContent();
+	  this.inTxField = true;
+	  
+  }
+
+  this.ctrl$txfieldend = function(cmd) {
+		//If we know we're in a txfield, resume collecting text
+		if (this.inTxField) {
+			//Ignore anything collected within txfield
+			this.clearUnstoredContent();
+			
+			//Clear txfield flag
+			this.inTxField = false;
+		}
+		else {
+			//If we encounter a txfieldend that was not preceded by a txfield start,
+			//store everything so far and ignore everything after
+			this.addAllStoredContent();
+			this.abandonDocument = true;
+		}
   }
 
   // alignment

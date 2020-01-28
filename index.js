@@ -24,8 +24,8 @@ function parseString (string, cb) {
 
   for (var i = 0; i < rtfParsed.length; i++) {
       interpreter.write(rtfParsed[i], null);
-      //Stop reading after txfieldend tags (may not be appropriate in all contexts)
-      if (interpreter.txfieldend) {
+      //Check for any indication to abandon document early
+      if (interpreter.abandonDocument) {
 			   break;
 	 	  }
 
