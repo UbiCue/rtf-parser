@@ -111,12 +111,15 @@ function RTFInterpreter(document) {
 	}
   this.flushHexStore = function() {
     if (this.hexStore.length > 0) {
-      let hexstr = this.hexStore.map(function(cmd) { cmd.value }).join('')
-      this.group.addContent(new RTFSpan({
-        value: iconv.decode(
-          Buffer.from(hexstr, 'hex'), this.group.get('charset'))
-      }))
-      this.hexStore.splice(0)
+		var hexstr = '';
+		for (var i=0; i<this.hexStore.length; i++) {
+			hexstr += this.hexStore[i].value;
+		}
+		this.group.addContent(new RTFSpan({
+			value: iconv.decode(
+				Buffer.from(hexstr, 'hex'), this.group.get('charset'))
+		}));
+		this.hexStore.splice(0);
     }
   }
 
