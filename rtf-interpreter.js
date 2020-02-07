@@ -37,6 +37,7 @@ function RTFInterpreter(document) {
   this.objectMode = true;
   this.inTxField = false;
   this.abandonDocument = false;
+  this.savedCharset = '';
   
   //Explicitly define once
   this.once = function(context, fn) {
@@ -375,6 +376,17 @@ function RTFInterpreter(document) {
     } else {
       	this.group.charset = 'CP' + codepage
     }
+  }
+  this.ctrl$hich = function() {
+	  this.group.charset = 'CP1252';
+  }
+  this.ctrl$loch = function() {
+	  if (this.savedCharset = '') {
+		this.savedCharset = this.group.charset;
+	  }
+	  else {
+		this.group.charset = this.savedCharset;
+	  }
   }
 
 // fonts
