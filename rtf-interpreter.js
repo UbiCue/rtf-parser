@@ -377,6 +377,10 @@ function RTFInterpreter(document) {
       	this.group.charset = 'CP' + codepage
     }
   }
+  this.ctrl$uc = function(n) {
+	  //This works for n=1 (1 byte Unicode characters), different charsets may be needed for n>1
+	  this.group.charset = 'CP1252';
+  }
   this.ctrl$hich = function() {
 	  this.group.charset = 'CP1252';
   }
