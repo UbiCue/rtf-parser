@@ -385,7 +385,7 @@ function RTFInterpreter(document) {
 	  this.group.charset = 'CP1252';
   }
   this.ctrl$loch = function() {
-	  if (this.savedCharset = '') {
+	  if (this.savedCharset == '') {
 		this.savedCharset = this.group.charset;
 	  }
 	  else {
