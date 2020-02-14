@@ -318,19 +318,33 @@ function RTFInterpreter(document) {
     this.doc.style.dir = 'ltr'
   }
   this.ctrl$rtlpar = function() {
-    this.spanstyle.dir = 'rtl'
+    this.spanStyle.dir = 'rtl'
   }
   this.ctrl$ltrpar = function() {
-    this.spanstyle.dir = 'ltr'
+    this.spanStyle.dir = 'ltr'
+  }
+  this.ctrl$rtlmark = function() {
+    this.spanStyle.dir = 'rtl'
+  }
+  this.ctrl$ltrmark = function() {
+    this.spanStyle.dir = 'ltr'
   }
 
   // general style
+  resetSpanStyle = function() {
+	this.spanStyle.bold = false;
+    this.spanStyle.italic = false;
+    this.spanStyle.foreground = {red: 0, blue: 0, green: 0};
+	this.spanStyle.dir = 'ltr';
+	this.spanStyle.caps = false;
+  }
   this.ctrl$par = function() {
     //Create new paragraph, starting from document styling
     this.group.addContent(new RTFParagraph(this.doc))
   }
   this.ctrl$pard = function() {
-    this.group.resetStyle()
+    this.group.resetStyle();
+	resetSpanStyle();
   }
   this.ctrl$plain = function() {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
@@ -338,11 +352,7 @@ function RTFInterpreter(document) {
     this.group.style.bold = false;
     this.group.style.italic = false;
     this.group.style.underline = false;
-    this.spanStyle.bold = false;
-    this.spanStyle.italic = false;
-    this.spanStyle.foreground = {red: 0, blue: 0, green: 0};
-	this.spanStyle.dir = 'ltr';
-	this.spanStyle.caps = false;
+    resetSpanStyle();
   }
   this.ctrl$b = function(set) {
     this.group.style.bold = set !== 0
@@ -382,13 +392,53 @@ function RTFInterpreter(document) {
   this.ctrl$strike = function(set) {
     this.group.style.strikethrough = set !== 0
   }
+  this.ctrl$strikedl = function(set) {
+	 //Treat double strikethrough as single strikethrough
+     this.group.style.strikethrough = set !== 0
+  }
   this.ctrl$ul = function(set) {
     this.group.style.underline = set !== 0
   }
   this.ctrl$ulnone = function(set) {
     this.group.style.underline = false
   }
+  this.ctrl$uld = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$uldash = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$uldashd = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$uldashdd = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$uldb = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$ulth = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$ulw = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
+  this.ctrl$ulwave = function(set) {
+	//Treat various underline styles as standard underline
+    this.group.style.underline = set !== 0
+  }
   this.ctrl$caps = function() {
+	  this.spanStyle.caps = true;
+  }
+  this.ctrl$scaps = function() {
+	  //Treat small caps as regular all caps
 	  this.spanStyle.caps = true;
   }
   this.ctrl$fi = function(value) {
@@ -406,12 +456,53 @@ function RTFInterpreter(document) {
   this.ctrl$culi = function(value) {
     this.group.style.indent = value * 100
   }
+  this.ctrl$ri = function(value) {
+    this.group.style.rightindent = value;
+  }
+  
+  //Special characters
   this.ctrl$tab = function() {
       var spacer = { value: "&nbsp;", style: this.group.style };
       this.group.addContent(new RTFSpan(spacer));
   }
   this.ctrl$tx = function() {
 	  //Setting tab stops not supported
+  }
+  this.ctrl$emdash = function() {
+	  var emdash = { value: "&mdash; ", style: this.group.style };
+      this.group.addContent(new RTFSpan(emdash));
+  }
+  this.ctrl$endash = function() {
+	  var endash = { value: "&ndash; ", style: this.group.style };
+      this.group.addContent(new RTFSpan(endash));
+  }
+  this.ctrl$emspace = function() {
+	  var emspace = { value: "&emsp;", style: this.group.style };
+      this.group.addContent(new RTFSpan(emspace));
+  }
+  this.ctrl$enspace = function() {
+	  var enspace = { value: "&ensp;", style: this.group.style };
+      this.group.addContent(new RTFSpan(enspace));
+  }
+  this.ctrl$bullet = function() {
+	  var bullet = { value: "&bull; ", style: this.group.style };
+      this.group.addContent(new RTFSpan(bullet));
+  }
+  this.ctrl$lquote = function() {
+	  var quote = { value: "&lsquo;", style: this.group.style };
+      this.group.addContent(new RTFSpan(quote));
+  }
+  this.ctrl$rquote = function() {
+	  var quote = { value: "&rsquo;", style: this.group.style };
+      this.group.addContent(new RTFSpan(quote));
+  }
+  this.ctrl$ldblquote = function() {
+	  var quote = { value: "&ldquo;", style: this.group.style };
+      this.group.addContent(new RTFSpan(quote));
+  }
+  this.ctrl$rdblquote = function() {
+	  var quote = { value: "&rdquo;", style: this.group.style };
+      this.group.addContent(new RTFSpan(quote));
   }
 
 // encodings
