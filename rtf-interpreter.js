@@ -331,7 +331,7 @@ function RTFInterpreter(document) {
   }
 
   // general style
-  resetSpanStyle = function() {
+  this.resetSpanStyle = function() {
 	this.spanStyle.bold = false;
     this.spanStyle.italic = false;
     this.spanStyle.foreground = {red: 0, blue: 0, green: 0};
