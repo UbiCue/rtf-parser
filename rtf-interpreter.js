@@ -344,7 +344,7 @@ function RTFInterpreter(document) {
   }
   this.ctrl$pard = function() {
     this.group.resetStyle();
-	resetSpanStyle();
+	this.resetSpanStyle();
   }
   this.ctrl$plain = function() {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
@@ -352,7 +352,7 @@ function RTFInterpreter(document) {
     this.group.style.bold = false;
     this.group.style.italic = false;
     this.group.style.underline = false;
-    resetSpanStyle();
+    this.resetSpanStyle();
   }
   this.ctrl$b = function(set) {
     this.group.style.bold = set !== 0
