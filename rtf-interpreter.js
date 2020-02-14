@@ -63,7 +63,7 @@ function RTFInterpreter(document) {
   this.deriveCmd = function(type, prefix) {
 	let command = '';
 		for (var i=0; i<type.length; i++) {
-			if ((type[i] == '-') && (i<type.length+1)) {
+			if ((type[i] == '-') && (i<type.length-1)) {
 				command += type[i+1].toUpperCase();
 				i++;
 			}
@@ -175,10 +175,14 @@ function RTFInterpreter(document) {
         cmd.style = this.group.style;
     }
     //Update any styling specified for the current span
+	if (this.spanStyle.caps) {
+		cmd.value = cmd.value.toUpperCase();
+	}
     var newSpan = new RTFSpan(cmd);
     newSpan.style.foreground = this.spanStyle.foreground;
     newSpan.style.bold = this.spanStyle.bold;
     newSpan.style.italic = this.spanStyle.italic;
+	newSpan.style.direction = this.spanStyle.dir;
     //cmd.style.bold = this.spanStyle.bold;
     //cmd.style.italic = this.spanStyle.italic;
     //this.group.addContent(new RTFSpan(cmd));
@@ -192,7 +196,10 @@ function RTFInterpreter(document) {
       	if (this[method]) {
         	this[method](cmd.param)
       	} else {
-        	if (!this.group.get('ignorable')) process.emit('debug', method, cmd.param)
+        	if (!this.group.get('ignorable')) {
+				//process.emit('debug', method, cmd.param) 
+				console.log("Unknown RTF command "+cmd.value+", tried "+method);
+			}
       	}
       }
   }
@@ -262,6 +269,26 @@ function RTFInterpreter(document) {
 			this.abandonDocument = true;
 		}
   }
+  this.ctrl$viewkind = function(num) {
+	  //Not supported; log request
+	  var requestedView = '';
+	  switch(num) {
+			case 0: requestedView = 'None';
+					break;
+			case 1: requestedView = 'Page Layout';
+					break;
+			case 2: requestedView = 'Outline';
+					break;
+			case 3: requestedView = 'Master';
+					break;
+			case 4: requestedView = 'Normal';
+					break;
+			case 5: requestedView = 'Outline';
+					break;
+			default: requestedView = 'Unknown';
+	  }
+	  console.log("Requested document view "+requestedView);
+  }
 
   // alignment
   this.ctrl$qc = function() {
@@ -284,6 +311,18 @@ function RTFInterpreter(document) {
   this.ctrl$ltrch = function() {
     this.group.style.dir = 'ltr'
   }
+  this.ctrl$rtldoc = function() {
+    this.doc.style.dir = 'rtl'
+  }
+  this.ctrl$ltrdoc = function() {
+    this.doc.style.dir = 'ltr'
+  }
+  this.ctrl$rtlpar = function() {
+    this.spanstyle.dir = 'rtl'
+  }
+  this.ctrl$ltrpar = function() {
+    this.spanstyle.dir = 'ltr'
+  }
 
   // general style
   this.ctrl$par = function() {
@@ -302,6 +341,8 @@ function RTFInterpreter(document) {
     this.spanStyle.bold = false;
     this.spanStyle.italic = false;
     this.spanStyle.foreground = {red: 0, blue: 0, green: 0};
+	this.spanStyle.dir = 'ltr';
+	this.spanStyle.caps = false;
   }
   this.ctrl$b = function(set) {
     this.group.style.bold = set !== 0
@@ -317,6 +358,17 @@ function RTFInterpreter(document) {
     // thus managing to match literally no one.
     charBuf.writeInt16LE(num, 0)
     this.group.addContent(new RTFSpan({value: iconv.decode(charBuf, 'ucs2')}))
+  }
+  this.ctrl$upr = function() {
+	  this.group.ignorable = true;
+  }
+  this.ctrl$ud = function() {
+	  //Indicated block containing Unicode
+	  //Turn off any ignoring of previous upr section
+	  this.group.ignorable = false;
+	  if (this.group.parent !== undefined) {
+		this.group.parent.ignorable = false;
+	  }
   }
   this.ctrl$super = function() {
     this.group.style.valign = 'super'
@@ -336,6 +388,9 @@ function RTFInterpreter(document) {
   this.ctrl$ulnone = function(set) {
     this.group.style.underline = false
   }
+  this.ctrl$caps = function() {
+	  this.spanStyle.caps = true;
+  }
   this.ctrl$fi = function(value) {
     this.group.style.firstLineIndent = value
   }
@@ -354,6 +409,9 @@ function RTFInterpreter(document) {
   this.ctrl$tab = function() {
       var spacer = { value: "&nbsp;", style: this.group.style };
       this.group.addContent(new RTFSpan(spacer));
+  }
+  this.ctrl$tx = function() {
+	  //Setting tab stops not supported
   }
 
 // encodings
@@ -407,6 +465,11 @@ function RTFInterpreter(document) {
     }
   }
   this.ctrl$fnil = function() {
+    if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
+      this.group.get('currentFont').family = 'nil'
+    }
+  }
+  this.ctrl$ftnil = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
       this.group.get('currentFont').family = 'nil'
     }
@@ -519,6 +582,9 @@ function RTFInterpreter(document) {
     this.group.ignorable = true
   }
   this.ctrl$mmathPr = function(value) {
+    this.group.ignorable = true
+  }
+  this.ctrl$filetbl = function(value) {
     this.group.ignorable = true
   }
 }
