@@ -117,10 +117,19 @@ function RTFInterpreter(document) {
 		for (var i=0; i<this.hexStore.length; i++) {
 			hexstr += this.hexStore[i].value;
 		}
-		this.group.addContent(new RTFSpan({
-			value: iconv.decode(
-				Buffer.from(hexstr, 'hex'), this.group.get('charset'))
-		}));
+		if (this.group.get('charset').indexOf('Symbol') >= 0) {
+			console.log('Decoding hex strings from symbol charset not supported');
+			this.group.addContent(new RTFSpan({
+				value: iconv.decode(
+					Buffer.from(hexstr, 'hex'), this.group.get('CP1252'))
+			}));
+		}
+		else {		
+			this.group.addContent(new RTFSpan({
+				value: iconv.decode(
+					Buffer.from(hexstr, 'hex'), this.group.get('charset'))
+			}));
+		}
 		this.hexStore.splice(0);
     }
   }
