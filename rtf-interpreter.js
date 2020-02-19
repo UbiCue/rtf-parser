@@ -664,6 +664,9 @@ function RTFInterpreter(document) {
   }
   this.ctrl$widctlpar = function() {
   }
+  this.ctrl$noproof = function() {
+	  //Explicitly ignore tags indicating to ignore automatic proofreading
+  }
   
   //Explicitly disregard form formatting
   this.ctrl$formprot = function() {
