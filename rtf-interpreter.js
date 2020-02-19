@@ -40,6 +40,20 @@ function RTFInterpreter(document) {
   this.abandonDocument = false;
   this.savedCharset = '';
   
+  this.defaultTabWidth = 720;
+  this.tabWidth = this.defaultTabWidth;
+  this.spacing = 0; //0 indicates default, 1 is explicitly single, >1 for multi-line spacing
+  
+  this.defaultLang = 1033;
+  this.rtlfont = 0;
+  this.ltrfont = 0;
+  this.rtllang = 1033;
+  this.ltrlang = 1033;
+  this.rtlfontsize = 24;
+  this.ltrfontsize = 24;
+  this.colorrtl = 0;
+  this.colorltr = 0;
+  
   //Explicitly define once
   this.once = function(context, fn) {
     var result;
@@ -92,6 +106,7 @@ function RTFInterpreter(document) {
 		} else {
 			//process.emit('error', `Unknown RTF command ${cmd.type}, tried ${method}`)
 			console.log("Unknown RTF command "+cmd.type+", tried "+method);
+			this.doc.errors.push("Unknown RTF command "+cmd.type+", tried "+method);
 		}
 	}
  
@@ -117,19 +132,10 @@ function RTFInterpreter(document) {
 		for (var i=0; i<this.hexStore.length; i++) {
 			hexstr += this.hexStore[i].value;
 		}
-		if (this.group.get('charset').indexOf('Symbol') >= 0) {
-			console.log('Decoding hex strings from symbol charset not supported');
-			this.group.addContent(new RTFSpan({
-				value: iconv.decode(
-					Buffer.from(hexstr, 'hex'), this.group.get('CP1252'))
-			}));
-		}
-		else {		
-			this.group.addContent(new RTFSpan({
-				value: iconv.decode(
-					Buffer.from(hexstr, 'hex'), this.group.get('charset'))
-			}));
-		}
+		this.group.addContent(new RTFSpan({
+			value: iconv.decode(
+				Buffer.from(hexstr, 'hex'), this.group.get('charset'))
+		}));
 		this.hexStore.splice(0);
     }
   }
@@ -164,21 +170,36 @@ function RTFInterpreter(document) {
 		process.emit('debug', 'GROUP END', endingGroup.type, endingGroup.get('ignorable'))
 	}
   }
+  this.ctrl$sect = function() {
+	  //New section
+	  this.flushHexStore();
+	  if (this.group) this.groupStack.push(this.group);
+	  this.group = new RTFGroup(this.group || this.doc);
+  }
+  this.ctrl$sectd = function() {
+	  //Use "plain" properties as section defaults
+	  this.group.style.fontSize = this.doc.getStyle('fontSize')
+	  //When explicitly setting to plain, set all styles to false for group and span
+      this.group.style.bold = false;
+      this.group.style.italic = false;
+      this.group.style.underline = false;
+	  this.group.style.language = this.defaultLang;
+      this.resetSpanStyle();
+  }
   this.addContent = function(destination, content) {
 		//Don't add any content while in a TxField
-		if (!this.inTxField) {
-			if (typeof destination.docAddContent !== 'undefined') {
-				destination.docAddContent(content)
-			}
-			else if (typeof destination.addContent !== 'undefined') {
-				destination.addContent(content);
-			}
+		if (typeof destination.docAddContent !== 'undefined') {
+			destination.docAddContent(content)
+		}
+		else if (typeof destination.addContent !== 'undefined') {
+			destination.addContent(content);
 		}
   }
   this.cmd$text = function(cmd) {
     this.flushHexStore()
     if (!this.group) { // an RTF fragment, missing the {\rtf1 header
-      this.group = this.doc
+      //this.group = this.doc
+	  this.group = new RTFGroup(this.doc);
     }
     //If there isn't already a style specified, use the current group style to start
     if (typeof cmd.style === 'undefined') {
@@ -208,7 +229,8 @@ function RTFInterpreter(document) {
       	} else {
         	if (!this.group.get('ignorable')) {
 				//process.emit('debug', method, cmd.param) 
-				console.log("Unknown RTF command "+cmd.value+", tried "+method);
+				console.log("Unknown RTF control word "+cmd.value+", tried "+method);
+				this.doc.errors.push("Unknown RTF control word "+cmd.value+", tried "+method);
 			}
       	}
       }
@@ -219,6 +241,7 @@ function RTFInterpreter(document) {
   this.cmd$error = function(cmd) {
     console.log('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.');
     //this.emit('error', new Error('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.'))
+	this.doc.errors.push('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.');
   }
 
   this.ctrl$rtf = function() {
@@ -254,12 +277,17 @@ function RTFInterpreter(document) {
 		this.group = null;
   }
 
+  this.ctrl$txfielddef = function() {
+	  //Handle txfieldstart and texfieldend
+	  this.inTxField = true;
+  }
+
   this.ctrl$txfieldstart = function(cmd) {
 	  //If we encounter a txfield, add all content that we've found thus far to the document,
 	  //and flag to ignore anything inside the txfield
-	  
-	  this.addAllStoredContent();
 	  this.inTxField = true;
+	  //Ignore the group that includes the txfieldstart
+	  this.group.ignorable = true;
 	  
   }
 
@@ -267,7 +295,7 @@ function RTFInterpreter(document) {
 		//If we know we're in a txfield, resume collecting text
 		if (this.inTxField) {
 			//Ignore anything collected within txfield
-			this.clearUnstoredContent();
+			this.group.ignorable = true;
 			
 			//Clear txfield flag
 			this.inTxField = false;
@@ -314,32 +342,6 @@ function RTFInterpreter(document) {
     this.group.style.align = 'right'
   }
 
-  // text direction
-  this.ctrl$rtlch = function() {
-    this.group.style.dir = 'rtl'
-  }
-  this.ctrl$ltrch = function() {
-    this.group.style.dir = 'ltr'
-  }
-  this.ctrl$rtldoc = function() {
-    this.doc.style.dir = 'rtl'
-  }
-  this.ctrl$ltrdoc = function() {
-    this.doc.style.dir = 'ltr'
-  }
-  this.ctrl$rtlpar = function() {
-    this.spanStyle.dir = 'rtl'
-  }
-  this.ctrl$ltrpar = function() {
-    this.spanStyle.dir = 'ltr'
-  }
-  this.ctrl$rtlmark = function() {
-    this.spanStyle.dir = 'rtl'
-  }
-  this.ctrl$ltrmark = function() {
-    this.spanStyle.dir = 'ltr'
-  }
-
   // general style
   this.resetSpanStyle = function() {
 	this.spanStyle.bold = false;
@@ -348,13 +350,33 @@ function RTFInterpreter(document) {
 	this.spanStyle.dir = 'ltr';
 	this.spanStyle.caps = false;
   }
+  this.nextParagraph = function(parentStyle) {
+	this.group.addContent(new RTFParagraph(parentStyle));
+	for (var i=1; i<this.spacing; i++) {
+		//Add extra spacing if required
+		this.group.addContent(new RTFParagraph(parentStyle));
+	}
+  }
   this.ctrl$par = function() {
     //Create new paragraph, starting from document styling
-    this.group.addContent(new RTFParagraph(this.doc))
+    this.nextParagraph(this.doc);
+  }
+  this.ctrl$n = function() {
+    //For newlines, create new paragraph, starting from group styling
+	if (!(this.group instanceof FontTable) && (!(this.group.parent instanceof FontTable))) {
+		this.nextParagraph(this.group);
+	}
+  }
+  this.ctrl$r = function() {
+    //For carriage returns, create new paragraph, starting from group styling
+	if (!(this.group instanceof FontTable) && (!(this.group.parent instanceof FontTable))) {
+		this.nextParagraph(this.group);
+	}
   }
   this.ctrl$pard = function() {
     this.group.resetStyle();
 	this.resetSpanStyle();
+	this.spacing = 0;
   }
   this.ctrl$plain = function() {
     this.group.style.fontSize = this.doc.getStyle('fontSize')
@@ -362,7 +384,9 @@ function RTFInterpreter(document) {
     this.group.style.bold = false;
     this.group.style.italic = false;
     this.group.style.underline = false;
+	this.group.style.language = this.defaultLang;
     this.resetSpanStyle();
+	this.spacing = 0;
   }
   this.ctrl$b = function(set) {
     this.group.style.bold = set !== 0
@@ -470,13 +494,65 @@ function RTFInterpreter(document) {
     this.group.style.rightindent = value;
   }
   
+  this.ctrl$marglsxn = function(value) {
+	  this.doc.style.indent = value * 100;
+  }
+  this.ctrl$margrsxn = function(value) {
+	  this.doc.style.rightindent = value * 100;
+  }
+  this.ctrl$margtsxn = function(value) {
+	  this.doc.style.padtop = value * 100;
+  }
+  this.ctrl$margbsxn = function(value) {
+	  this.doc.style.padbottom = value * 100;
+  }
+  
+  //Border options
+  this.ctrl$pgbrdrhead = function(value) {
+	  this.doc.style.borderheader = value * 100;
+  }
+  this.ctrl$pgbrdrfoot = function(value) {
+	  this.doc.style.borderfooter = value * 100;
+  }
+  this.ctrl$pgbrdrt = function(value) {
+	  this.doc.style.bordertop = value * 100;
+  }
+  this.ctrl$pgbrdrb = function(value) {
+	  this.doc.style.borderbottom = value * 100;
+  }
+  this.ctrl$pgbrdrr = function(value) {
+	  this.doc.style.borderright = value * 100;
+  }
+  this.ctrl$pgbrdrl = function(value) {
+	  this.doc.style.borderleft = value * 100;
+  }
+  this.ctrl$pgbrdrart = function(value) {
+	  //Not supported
+  }
+  this.ctrl$pgbrdropt = function(value) {
+	  //Not supported
+  }
+  this.ctrl$pgbrdrsnap = function() {
+	  //Not supported
+  }
+  
   //Special characters
   this.ctrl$tab = function() {
+	  //Potentially vary tab width by adding multiple HTML tabs using this.tabWidth
       var spacer = { value: "&nbsp;", style: this.group.style };
       this.group.addContent(new RTFSpan(spacer));
   }
   this.ctrl$tx = function() {
 	  //Setting tab stops not supported
+  }
+  this.ctrl$sl = function(num) {
+	  this.spacing = 1;
+  }
+  this.ctrl$slmult = function(num) {
+	  this.spacing = this.spacing*(num+1);
+  }
+  this.ctrl$deftab = function(num) {
+	  this.defaultTabWidth = num;
   }
   this.ctrl$emdash = function() {
 	  var emdash = { value: "&mdash; ", style: this.group.style };
@@ -532,6 +608,7 @@ function RTFInterpreter(document) {
     if (availableCP.indexOf(codepage) === -1) {
     	console.log('Codepage ' + codepage + ' is not available.');
       	//this.emit('error', new Error('Codepage ' + codepage + ' is not available.'))
+		this.doc.errors.push('Error: ' + cmd.value + (cmd.row && cmd.col ? ' at line ' + cmd.row + ':' + cmd.col : '') + '.');
     } else {
       	this.group.charset = 'CP' + codepage
     }
@@ -551,6 +628,185 @@ function RTFInterpreter(document) {
 		this.group.charset = this.savedCharset;
 	  }
   }
+  
+  this.ctrl$itap = function(value) {
+	  //Don't support paragraph nesting levels
+  }
+  
+  //Explicitly ignore page-level controls mostly relevant to print settings, keeping text together on the printed page, etx
+  this.ctrl$paperw = function() {
+  }
+  this.ctrl$paperh = function() {
+  }
+  this.ctrl$psz = function() {
+  }
+  this.ctrl$facingp = function() {
+  }
+  this.ctrl$margmirror = function() {
+  }
+  this.ctrl$landscape = function() {
+  }
+  this.ctrl$pgnstart = function() {
+  }
+  this.ctrl$widowctrl = function() {
+  }
+  this.ctrl$pgwsxn = function(num) {
+  }
+  this.ctrl$pghsxn = function(num) {
+  }
+  this.ctrl$hyphpar = function() {
+  }
+  this.ctrl$keep = function() {
+  }
+  this.ctrl$pagebb = function() {
+  }
+  this.ctrl$nowidctlpar = function() {
+  }
+  this.ctrl$widctlpar = function() {
+  }
+  
+  //Explicitly disregard form formatting
+  this.ctrl$formprot = function() {
+  }
+  this.ctrl$allprot = function() {
+  }
+  this.ctrl$formshade = function() {
+  }
+  this.ctrl$formdisp = function() {
+  }
+  this.ctrl$printdata = function() {
+  }
+  
+  this.ctrl$headery = function(num) {
+	  this.doc.style.headerSpacing = num;
+  }
+  this.ctrl$footery = function(num) {
+	  this.doc.style.footerSpacing = num;
+  }
+  // text direction
+  this.ctrl$rtlch = function() {
+    this.group.style.dir = 'rtl';
+	this.group.style.font = this.fontrtl;
+	this.group.style.fontSize = this.fontsizertl;
+	this.spanStyle.foreground = this.colorrtl;
+  }
+  this.ctrl$ltrch = function() {
+    this.group.style.dir = 'ltr';
+	this.group.style.font = this.fontltr;
+	this.group.style.fontSize = this.fontsizeltr;
+	this.spanStyle.foreground = this.colorltr;
+  }
+  this.ctrl$rtldoc = function() {
+    this.doc.style.dir = 'rtl';
+	this.group.style.font = this.fontrtl;
+	this.group.style.fontSize = this.fontsizertl;
+	this.spanStyle.foreground = this.colorrtl;
+  }
+  this.ctrl$ltrdoc = function() {
+    this.doc.style.dir = 'ltr';
+	this.group.style.font = this.fontltr;
+	this.group.style.fontSize = this.fontsizeltr;
+	this.spanStyle.foreground = this.colorltr;
+  }
+  this.ctrl$rtlpar = function() {
+    this.spanStyle.dir = 'rtl';
+	this.group.style.font = this.fontrtl;
+	this.group.style.fontSize = this.fontsizertl;
+	this.spanStyle.foreground = this.colorrtl;
+  }
+  this.ctrl$ltrpar = function() {
+    this.spanStyle.dir = 'ltr';
+	this.group.style.font = this.fontltr;
+	this.group.style.fontSize = this.fontsizeltr;
+	this.spanStyle.foreground = this.colorltr;
+  }
+  this.ctrl$rtlmark = function() {
+    this.spanStyle.dir = 'rtl'
+	this.group.style.font = this.fontrtl;
+	this.group.style.fontSize = this.fontsizertl;
+	this.spanStyle.foreground = this.colorrtl;
+  }
+  this.ctrl$ltrmark = function() {
+    this.spanStyle.dir = 'ltr';
+	this.group.style.font = this.fontltr;
+	this.group.style.fontSize = this.fontsizeltr;
+	this.spanStyle.foreground = this.colorltr;
+  }
+
+  this.ctrl$af = function(value) {
+	  if (this.group.style.dir == 'rtl') {
+		  this.fontrtl = value;
+	  }
+	  else {
+		  this.fontltr = value;
+	  }
+  }
+  
+  this.ctrl$alang = function(value) {
+	  if (this.group.style.dir == 'rtl') {
+		  this.langrtl = value;
+	  }
+	  else {
+		  this.langltr = value;
+	  }
+  }
+  
+  this.ctrl$afs = function(value) {
+	  if (this.group.style.dir == 'rtl') {
+		  this.fontsizertl = value;
+	  }
+	  else {
+		  this.fontsizeltr = value;
+	  }
+  }
+  
+  this.ctrl$acf = function(value) {
+	  if (this.group.style.dir == 'rtl') {
+		  this.colorrtl = value;
+	  }
+	  else {
+		  this.colorltr = value;
+	  }
+  }
+  
+  //Unsupported features for bidrectional text
+  this.ctrl$rin = function(value) {
+	  //Don't support separate indenting for right-to-left paragraphs
+  }
+  this.ctrl$ab = function() {
+  }
+  this.ctrl$acaps = function() {
+  }
+  this.ctrl$adn = function(value) {
+  }
+  this.ctrl$afs = function() {
+  }
+  this.ctrl$ai = function() {
+  }
+  this.ctrl$aoutl = function() {
+  }
+  this.ctrl$ascaps = function() {
+  }
+  this.ctrl$ashad = function() {
+  }
+  this.ctrl$astrike = function() {
+  }
+  this.ctrl$aul = function() {
+  }
+  this.ctrl$auld = function() {
+  }
+  this.ctrl$auldb = function() {
+  }
+  this.ctrl$aulnone = function() {
+  }
+  this.ctrl$aulw = function() {
+  }
+  this.ctrl$aup = function(value) {
+  }
+  this.ctrl$adeff = function(value) {
+  }
+  this.ctrl$adeflang = function(value) {
+  }
 
 // fonts
   this.ctrl$fonttbl = function() {
@@ -564,6 +820,9 @@ function RTFInterpreter(document) {
     } else {
       this.group.style.font = num
     }
+  }
+  this.ctrl$deff = function(num) {
+	  this.group.style.font = num;
   }
   this.ctrl$fnil = function() {
     if (this.group instanceof FontTable || this.group.parent instanceof FontTable) {
@@ -621,6 +880,7 @@ function RTFInterpreter(document) {
       if (charset == null) {
       	console.log('Unsupported charset code #' + code);
         //return this.emit('error', new Error('Unsupported charset code #' + code))
+		this.doc.errors.push('Unsupported charset code #' + code);
       }
       this.group.get('currentFont').charset = charset
     }
@@ -660,6 +920,38 @@ function RTFInterpreter(document) {
   this.ctrl$fs = function(value) {
     this.group.style.fontSize = value
   }
+  
+  this.ctrl$chshdng = function(value) {
+	  //Don't support character shading
+  }
+  this.ctrl$chshpat = function(value) {
+	  //Don't support background shading
+  }
+  this.ctrl$chcfpat = function(value) {
+	  //Don't support background shading
+  }
+  this.ctrl$chcbpat = function(value) {
+	  //Don't support color fill
+  }
+  
+  this.ctrl$lang = function(value) {
+	  this.group.style.language = value;
+  }
+  this.ctrl$deflang = function(value) {
+	  this.defaultLang = value;
+  }
+  this.ctrl$deflangfe = function(value) {
+	  //Don't support separate default and default Asian languages
+  }
+  this.ctrl$langfe = function(value) {
+	  //Don't support separate default and default Asian languages
+  }
+  this.ctrl$langnp = function(value) {
+	  //Don't support multiple languages
+  }
+  this.ctrl$langfenp = function(value) {
+	  //Don't support multiple languages
+  }
 
 // margins
   this.ctrl$margl = function(value) {
@@ -687,6 +979,12 @@ function RTFInterpreter(document) {
   }
   this.ctrl$filetbl = function(value) {
     this.group.ignorable = true
+  }
+  
+  //Unsupported, ignore tag
+  this.ctrl$lytexcttp = function() {
+  }
+  this.ctrl$viewbksp = function() {
   }
 }
 

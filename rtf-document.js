@@ -6,6 +6,7 @@ function RTFDocument() {
   RTFGroup.call(this, {});
   this.charset = 'ASCII'
   this.ignorable = false
+  this.errors = [];
   this.marginLeft = 1800
   this.marginRight = 1800
   this.marginBottom = 1440
