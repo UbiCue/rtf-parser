@@ -495,16 +495,16 @@ function RTFInterpreter(document) {
   }
   
   this.ctrl$marglsxn = function(value) {
-	  this.doc.style.indent = value * 100;
+	  this.doc.style.indent = value;
   }
   this.ctrl$margrsxn = function(value) {
-	  this.doc.style.rightindent = value * 100;
+	  this.doc.style.rightindent = value;
   }
   this.ctrl$margtsxn = function(value) {
-	  this.doc.style.padtop = value * 100;
+	  this.doc.style.padtop = value;
   }
   this.ctrl$margbsxn = function(value) {
-	  this.doc.style.padbottom = value * 100;
+	  this.doc.style.padbottom = value;
   }
   
   //Border options
