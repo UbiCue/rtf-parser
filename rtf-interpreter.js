@@ -132,6 +132,13 @@ function RTFInterpreter(document) {
 		for (var i=0; i<this.hexStore.length; i++) {
 			hexstr += this.hexStore[i].value;
 		}
+		if (this.group.charset = 'DBCS') {
+			var err = "Attempt to decode "+hexstr+" as a double-byte character; will attempt to decode using CP1252";
+			console.log(err);
+			this.doc.errors.push(err);
+			//Try CP1252 multi-byte encoding
+			this.group.charset = 'CP1252';
+		}
 		this.group.addContent(new RTFSpan({
 			value: iconv.decode(
 				Buffer.from(hexstr, 'hex'), this.group.get('charset'))
@@ -545,6 +552,9 @@ function RTFInterpreter(document) {
   this.ctrl$tx = function() {
 	  //Setting tab stops not supported
   }
+  this.ctrl$sa = function(num) {
+	  this.group.style.padbottom = num;
+  }
   this.ctrl$sl = function(num) {
 	  this.spacing = 1;
   }
@@ -616,6 +626,11 @@ function RTFInterpreter(document) {
   this.ctrl$uc = function(n) {
 	  //This works for n=1 (1 byte Unicode characters), different charsets may be needed for n>1
 	  this.group.charset = 'CP1252';
+	  if (n != 1) {
+			var err = "Attempting to use "+n+" byte unicode; will attempt to decode using CP1252";
+			console.log(err);
+			this.doc.errors.push(err);
+	  }
   }
   this.ctrl$hich = function() {
 	  this.group.charset = 'CP1252';
@@ -627,6 +642,9 @@ function RTFInterpreter(document) {
 	  else {
 		this.group.charset = this.savedCharset;
 	  }
+  }
+  this.ctrl$dbch = function() {
+	  this.group.charset = 'DBCS';
   }
   
   this.ctrl$itap = function(value) {
@@ -974,6 +992,28 @@ function RTFInterpreter(document) {
   this.ctrl$stylesheet = function(value) {
     this.group.ignorable = true
   }
+  this.ctrl$s = function(value) {
+		var err = "Attempt to reference stylesheet "+value+"; stylesheets not supported";
+		console.log(err);
+		this.doc.errors.push(err);
+  }
+  this.ctrl$listoverridetable = function() {
+    this.group.ignorable = true
+  }
+  this.ctrl$ls = function(value) {
+		var err = "Attempt to reference list override entry "+value+"; list override tables not supported";
+		console.log(err);
+		this.doc.errors.push(err);
+  }
+  this.ctrl$ilvl = function(value) {
+		//Will need to be supported if list override formatting is supported in the future
+		//For now, ignore; sould be preceded by an ls tag which will be logged
+  }
+  this.ctrl$listtext = function(value) {
+		//listtext blocks will contain formatting that takes the place of \\ls blocks.
+		//In the future if list overridge tables are supported, listtext blocks should be ignored.
+		//For now, consume the listtext tag itself and simply follow any subsequent formatting tags
+  }
   this.ctrl$info = function(value) {
     this.group.ignorable = true
   }
@@ -982,6 +1022,15 @@ function RTFInterpreter(document) {
   }
   this.ctrl$filetbl = function(value) {
     this.group.ignorable = true
+  }
+  this.ctrl$pn = function(value) {
+		//Ignore commands related to autoformatting of bullets and numbered lists
+		this.group.ignorable = true
+  }
+  this.ctrl$pntext = function(value) {
+		//pntext blocks will contain formatting that takes the place of \\pn blocks.
+		//In the future if pn is supported, pntext blocks should be ignored.
+		//For now, consume the pntext tag itself and simply follow any subsequent formatting tags
   }
   
   //Unsupported, ignore tag
