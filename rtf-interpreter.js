@@ -132,7 +132,7 @@ function RTFInterpreter(document) {
 		for (var i=0; i<this.hexStore.length; i++) {
 			hexstr += this.hexStore[i].value;
 		}
-		if (this.group.charset = 'DBCS') {
+		if (this.group.charset == 'DBCS') {
 			var err = "Attempt to decode "+hexstr+" as a double-byte character; will attempt to decode using CP1252";
 			console.log(err);
 			this.doc.errors.push(err);
