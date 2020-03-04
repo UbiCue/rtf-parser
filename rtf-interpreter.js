@@ -382,7 +382,7 @@ function RTFInterpreter(document) {
   }
   this.ctrl$pard = function() {
     this.group.resetStyle();
-	this.resetSpanStyle();
+	//this.resetSpanStyle();
 	this.spacing = 0;
   }
   this.ctrl$plain = function() {
