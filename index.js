@@ -31,6 +31,7 @@ function parseString (string, cb) {
 
   }
 
+  interpreter.finisher();
   cb(null, document);
 }
 

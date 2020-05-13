@@ -111,7 +111,7 @@ function RTFInterpreter(document) {
 	}
  
 	this.finisher = function() {
-		while (this.groupStack.length) this.cmd$groupEnd()
+		while (this.groupStack.length || this.group) this.cmd$groupEnd()
 		const initialStyle = this.doc.content.length ? this.doc.content[0].style : []
 		for (let i=0; i<Object.keys(this.doc.style).length;i++) {
 			let prop = Object.keys(this.doc.style)[i];

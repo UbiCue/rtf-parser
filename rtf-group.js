@@ -16,7 +16,7 @@ function RTFGroup(parent) {
   else {
       this.style = {};
   }
-  this.ignorable = null
+  this.ignorable = false;
 
   this.get = function(name) {
     return this[name] != null ? this[name] : this.parent.get(name)
